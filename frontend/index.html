@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#1a1d23" />
+    <meta name="description" content="Dayshift — daily study-time tracker." />
+    <title>Dayshift</title>
+
+    <!-- The gauge mark, same dial the dashboard draws. SVG first for modern
+         browsers, PNGs as fallback. No web manifest: the project rules out a PWA. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!--
+      Fonts are resolved locally, with no <link> to Google Fonts.
+
+      DESIGN.md offers "Google Fonts or self-hosted, whichever is simpler",
+      but the app makes no external network calls of any kind, and that is
+      the stricter rule — so the stacks in tailwind.config.js name JetBrains
+      Mono / Inter first (used when installed) and fall back to the macOS
+      system faces, which suit the panel aesthetic and keep the app fully
+      offline. See README.md for how to opt into webfonts if preferred.
+    -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

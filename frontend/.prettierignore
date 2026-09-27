@@ -1,0 +1,7 @@
+dist
+node_modules
+public
+test-results
+playwright-report
+src/api/schema.d.ts
+.openapi.json

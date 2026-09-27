@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-base text-ink font-sans antialiased;
+    /* Deliberately close to flat. The previous version washed the page with
+       three large coloured radials, which lifted the background toward the
+       panel colour and made the panels camouflage. A single very faint cool
+       gradient is enough to stop the page reading as a dead slab. */
+    background-image: linear-gradient(180deg, #0c0e17 0%, #0a0b12 38%, #090a10 100%);
+    background-attachment: fixed;
+  }
+
+  input[type='number'] {
+    @apply font-mono;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  ::selection {
+    @apply bg-cat2/40;
+  }
+
+  /* Tabular figures wherever numbers must line up in a column. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* A panel sits ABOVE the page: lighter surface, visible border, a soft cast
+     shadow, and a lit top edge. The shadow is doing most of the separating —
+     two dark greys can never differ enough in luminance alone. */
+  .panel {
+    @apply relative rounded border border-edge bg-panel shadow-panel
+           transition-shadow duration-200;
+  }
+
+  /* Category identity stripe down the left edge of a panel. */
+  .panel-accent {
+    @apply before:absolute before:inset-y-0 before:left-0 before:w-[3px]
+           before:rounded-l before:content-[''];
+  }
+  .panel-accent-1 {
+    @apply panel-accent before:bg-gradient-to-b before:from-cat1-bright before:to-cat1/20;
+  }
+  .panel-accent-2 {
+    @apply panel-accent before:bg-gradient-to-b before:from-cat2-bright before:to-cat2/20;
+  }
+  .panel-accent-3 {
+    @apply panel-accent before:bg-gradient-to-b before:from-cat3-bright before:to-cat3/20;
+  }
+  .panel-accent-4 {
+    @apply panel-accent before:bg-gradient-to-b before:from-cat4-bright before:to-cat4/20;
+  }
+  .panel-accent-5 {
+    @apply panel-accent before:bg-gradient-to-b before:from-cat5-bright before:to-cat5/20;
+  }
+  .panel-accent-6 {
+    @apply panel-accent before:bg-gradient-to-b before:from-cat6-bright before:to-cat6/20;
+  }
+
+  /* Tabs inside a block: one window visible at a time, so a block holds
+     several views without all of them competing for the first glance. */
+  .tab {
+    @apply rounded-sm px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.12em]
+           text-faint transition-colors hover:text-ink;
+  }
+  .tab[aria-selected='true'] {
+    @apply bg-raised text-ink shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset];
+  }
+
+  .panel-label {
+    @apply font-sans text-[11px] uppercase tracking-[0.14em] text-muted;
+  }
+
+  /* Inputs read as wells cut INTO the panel — darker than the surface they
+     sit on, which is the opposite of the panel's own relationship to the page
+     and is what makes them feel interactive. */
+  .term-input {
+    @apply w-full rounded-sm border border-edge/70 bg-base/60 px-3 py-2 font-mono
+           text-ink placeholder:text-faint outline-none transition-all
+           focus:border-steel focus:bg-base/80
+           focus:shadow-[0_0_0_3px_rgba(96,165,250,0.18)];
+  }
+
+  .term-input-error {
+    @apply !border-critical focus:!shadow-[0_0_0_3px_rgba(234,88,12,0.22)];
+  }
+
+  .btn {
+    @apply rounded-sm border border-edge bg-raised px-4 py-2 font-sans text-sm
+           text-ink shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,0_1px_2px_rgba(0,0,0,0.35)]
+           transition-all hover:border-steel hover:text-steel
+           hover:shadow-[0_1px_0_0_rgba(255,255,255,0.07)_inset,0_0_0_3px_rgba(96,165,250,0.14)]
+           disabled:cursor-not-allowed disabled:border-edge disabled:text-faint
+           disabled:shadow-none;
+  }
+
+  .btn-primary {
+    @apply rounded-sm border border-transparent bg-gradient-to-r from-cat1 to-cat2
+           px-4 py-2 font-sans text-sm font-medium text-white
+           shadow-[0_1px_0_0_rgba(255,255,255,0.18)_inset,0_2px_8px_-2px_rgba(139,92,246,0.5)]
+           transition-all hover:brightness-110
+           hover:shadow-[0_1px_0_0_rgba(255,255,255,0.22)_inset,0_4px_16px_-2px_rgba(139,92,246,0.65)]
+           disabled:cursor-not-allowed disabled:from-raised disabled:to-raised
+           disabled:text-faint disabled:shadow-none disabled:hover:brightness-100;
+  }
+
+  .btn-quiet {
+    @apply rounded-sm px-2.5 py-1 font-sans text-xs text-muted transition-colors
+           hover:bg-raised/60 hover:text-ink;
+  }
+
+  /* Sticky app header: stays put and blurs the page behind it, which is the
+     single strongest "this is an app, not a document" signal available. */
+  .app-header {
+    /* No negative margins: bleeding past the container left only a couple of
+       pixels of slack at common widths, and any narrower gutter would have
+       overflowed the page. Container-width is the safe version and reads the
+       same once it is blurred and stuck. */
+    /* items-center, not items-baseline: the logo is an SVG, and baseline
+       alignment lifted the whole brand group above the nav links. */
+    @apply sticky top-0 z-30 mb-8 flex flex-wrap items-center justify-between
+           gap-x-4 gap-y-2 rounded-b border-b border-edge/70 bg-base/85 py-3
+           backdrop-blur-md;
+  }
+
+  /* Small round swatch that sits beside a category name. */
+  .dot {
+    @apply inline-block h-2 w-2 shrink-0 rounded-full;
+  }
+
+  /* Tag chip. */
+  .chip {
+    @apply rounded-full border px-2 py-0.5 font-mono text-[10px];
+  }
+}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Dayshift">
+  <!-- The Dayshift mark (src/components/Logo.tsx): a teal-to-violet tile with
+       the dashboard's 270-degree gauge and a needle at ~72%. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0f8196"/>
+      <stop offset="100%" stop-color="#7c4ee0"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
+  <rect width="32" height="32" rx="8" fill="url(#sheen)"/>
+  <path d="M 9.919 23.281 A 8.6 8.6 0 1 1 22.081 23.281" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M 9.919 23.281 A 8.6 8.6 0 1 1 23.402 12.822" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+  <line x1="16" y1="17.2" x2="20.648" y2="14.451" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="16" cy="17.2" r="2" fill="#ffffff"/>
+</svg>
