@@ -76,10 +76,12 @@ build: ## Production build of the frontend
 check: lint format-check api-types-check typecheck test test-frontend e2e ## Everything, end to end
 	@echo "All checks passed."
 
-clean: ## Remove build artifacts and caches
-	@rm -rf $(FE)/dist $(FE)/tsconfig.tsbuildinfo .pytest_cache .ruff_cache backend.log \
+clean: ## Remove build artifacts and caches (never data, settings or logs)
+	@rm -rf $(FE)/dist $(FE)/tsconfig.tsbuildinfo .pytest_cache .ruff_cache \
 		$(FE)/test-results $(FE)/playwright-report
-	@find . -name __pycache__ -type d -not -path './node_modules/*' -exec rm -rf {} + 2>/dev/null || true
+	@find . \( -path ./.venv -o -path ./$(FE)/node_modules -o -path ./.git \) -prune -o \
+		\( -name __pycache__ -type d -o -name .DS_Store -type f \) -print0 \
+		| xargs -0 rm -rf
 
 BIN_DIR ?= $(shell brew --prefix 2>/dev/null || echo /usr/local)/bin
 
