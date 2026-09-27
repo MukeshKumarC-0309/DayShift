@@ -1,0 +1,2267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="A thirteen-chapter guide to using Dayshift, from first run to reading the scores.">
+<!--
+  Standalone copy of the Dayshift Handbook. Open it straight from disk:
+      open docs/handbook.html
+
+  The published artifact version of this page omits the document wrapper,
+  because the Artifact platform supplies one. This copy carries its own, so it
+  renders correctly from file:// — including on a phone, which needs the
+  viewport meta above.
+
+  Fonts are fetched from Google Fonts. Offline they fall back to the system
+  monospace and sans stacks declared in the CSS, which is why those stacks are
+  real rather than bare family names. Unlike the app itself — which deliberately
+  makes no external requests at all — this is a document, not part of the
+  running product.
+-->
+<title>Dayshift Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+<style>
+  /* Dayshift is a dark-only application. This guide commits to the same single
+     visual world on purpose — rendering a guide to a dark app on a light ground
+     would misrepresent every screenshot in it. Every colour is therefore
+     painted explicitly from the token set below rather than inherited. */
+  :root {
+    --page:      #0a0b12;
+    --panel:     #22283a;
+    --raised:    #2e3550;
+    --edge:      #3a4263;
+    --divider:   #2b3149;
+
+    --ink:       #eef1fa;
+    --muted:     #9aa3bd;
+    --faint:     #646d88;
+
+    /* Category identity — validated all-pairs against the panel surface. */
+    --cat1:      #1295ab;  --cat1-b: #22d3ee;
+    --cat2:      #8b5cf6;  --cat2-b: #a78bfa;
+    --cat3:      #ec4899;  --cat3-b: #f472b6;
+    --cat4-b: #8aaeff;  --cat5-b: #a8c93a;  --cat6-b: #e583bf;
+
+    /* Status — reserved, never used as a category colour. */
+    --healthy:   #34d399;
+    --warn:      #fbbf24;
+    --critical:  #ea580c;
+    --steel:     #60a5fa;
+
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    --rail: 260px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--page);
+    background-image: linear-gradient(180deg, #0c0e17 0%, #0a0b12 40%, #090a10 100%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* ---- Shell ---------------------------------------------------------- */
+  .shell {
+    display: grid;
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    gap: 0;
+    min-height: 100%;
+    max-width: 1220px;
+    margin-inline: auto;
+  }
+
+  /* ---- Chapter rail ---------------------------------------------------- */
+  .rail {
+    border-right: 1px solid var(--divider);
+    padding-block: 28px 40px;
+    padding-inline: 20px 18px;
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+
+  /* Same mark and wordmark as the app (src/components/Brand.tsx). */
+  .brand { display: flex; align-items: center; gap: 11px; margin-bottom: 26px; }
+  .brand svg { flex: none; }
+  .brand-text { display: flex; flex-direction: column; gap: 3px; }
+  .brand-name {
+    font-family: var(--sans);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .brand-name span {
+    background: linear-gradient(90deg, var(--cat1-b), var(--cat2-b));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .brand-sub {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    line-height: 1;
+  }
+
+  .rail-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--faint);
+    margin-bottom: 10px;
+  }
+
+  .toc { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+
+  .toc a {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 9px;
+    align-items: baseline;
+    padding: 7px 9px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.35;
+    border-left: 2px solid transparent;
+    transition: background-color .15s, color .15s, border-color .15s;
+  }
+  .toc a .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .toc a:hover { background: rgba(255,255,255,.04); color: var(--ink); }
+  .toc a[aria-current="page"] {
+    background: rgba(255,255,255,.055);
+    color: var(--ink);
+    border-left-color: var(--accent, var(--steel));
+  }
+  .toc a[aria-current="page"] .n { color: var(--accent, var(--steel)); }
+
+  /* Chapters carry the app's three category hues in rotation, so the rail
+     reads as belonging to the same product. */
+  .toc a:nth-child(3n+1) { --accent: var(--cat1-b); }
+  .toc a:nth-child(3n+2) { --accent: var(--cat2-b); }
+  .toc a:nth-child(3n+3) { --accent: var(--cat3-b); }
+
+  /* ---- Chapter body ---------------------------------------------------- */
+  main { padding-block: 28px 56px; padding-inline: 34px; min-width: 0; }
+
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 12px;
+  }
+  .eyebrow .pip { width: 7px; height: 7px; border-radius: 50%; background: var(--chapter, var(--steel)); flex: none; }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(25px, 4.4vw, 34px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 16.5px;
+    color: var(--muted);
+    max-width: 62ch;
+    margin: 0 0 30px;
+    text-wrap: pretty;
+  }
+
+  h2 {
+    font-family: var(--sans);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 34px 0 10px;
+    color: var(--ink);
+  }
+
+  h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--muted);
+    font-weight: 500;
+    margin: 0 0 10px;
+  }
+
+  p { max-width: 64ch; margin: 0 0 14px; text-wrap: pretty; }
+  main ul, main ol { max-width: 64ch; margin: 0 0 14px; padding-left: 20px; }
+  main li { margin-bottom: 7px; }
+  main li::marker { color: var(--faint); }
+
+  code {
+    font-family: var(--mono);
+    font-size: .88em;
+    background: rgba(255,255,255,.06);
+    border: 1px solid var(--divider);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--cat1-b);
+  }
+
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--muted); }
+
+  /* ---- Panels — the app's own surface treatment ------------------------ */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow:
+      0 1px 0 0 rgba(255,255,255,.055) inset,
+      0 1px 2px rgba(0,0,0,.45),
+      0 8px 24px -12px rgba(0,0,0,.75);
+    margin-bottom: 18px;
+  }
+  .panel > :last-child { margin-bottom: 0; }
+
+  .note {
+    border-left: 3px solid var(--note, var(--steel));
+    background: rgba(96,165,250,.055);
+    border-radius: 0 8px 8px 0;
+    padding: 13px 16px;
+    margin: 0 0 18px;
+    max-width: 66ch;
+  }
+  .note p { margin: 0; font-size: 14.5px; }
+  .note p + p { margin-top: 8px; }
+  .note .tag {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--note, var(--steel));
+    margin-bottom: 5px;
+  }
+  .note.warnish { --note: var(--warn); background: rgba(251,191,36,.06); }
+  .note.goodish { --note: var(--healthy); background: rgba(52,211,153,.06); }
+
+  /* ---- Tables ---------------------------------------------------------- */
+  .tablewrap { overflow-x: auto; margin-bottom: 18px; border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 380px; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--divider); }
+  thead th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--faint);
+    font-weight: 500;
+    border-bottom-color: var(--edge);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+  td .swatch { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+
+  /* ---- Figures --------------------------------------------------------- */
+  figure { margin: 0 0 18px; }
+  figcaption {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--faint);
+    margin-top: 9px;
+    max-width: 60ch;
+    line-height: 1.5;
+  }
+  svg { display: block; max-width: 100%; height: auto; }
+
+  /* Real screenshots of the app, taken from a demo copy with sample data. */
+  figure.shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--edge);
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+    background: var(--page);
+  }
+  figure.shot.narrow { max-width: 420px; }
+  figure.shot.phone { max-width: 300px; }
+  .shots2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: start; margin-bottom: 18px; }
+  .shots2 figure { margin: 0; }
+  kbd.k {
+    font-family: var(--mono); font-size: 12px; color: var(--ink);
+    background: var(--raised); border: 1px solid var(--edge); border-radius: 4px;
+    padding: 1px 6px;
+  }
+
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0 0 18px; max-width: 64ch; }
+  .steps li {
+    counter-increment: s;
+    display: grid;
+    grid-template-columns: 26px minmax(0,1fr);
+    gap: 12px;
+    padding-bottom: 14px;
+    margin: 0;
+  }
+  .steps li::before {
+    content: counter(s);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--page);
+    background: var(--chapter, var(--steel));
+    width: 21px; height: 21px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  .kv { display: grid; grid-template-columns: minmax(0,1fr); gap: 0; }
+  .kv > div {
+    display: flex; flex-wrap: wrap; gap: 4px 14px;
+    justify-content: space-between; align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--divider);
+  }
+  .kv > div:last-child { border-bottom: none; }
+  .kv dt { color: var(--muted); font-size: 14px; margin: 0; }
+  .kv dd { margin: 0; font-family: var(--mono); font-size: 13.5px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-bottom: 18px; }
+
+  /* ---- Chapter paging -------------------------------------------------- */
+  .chapter[hidden] { display: none !important; }
+
+  .pager {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: space-between; align-items: stretch;
+    margin-top: 40px; padding-top: 22px;
+    border-top: 1px solid var(--divider);
+  }
+  .pager a {
+    display: flex; flex-direction: column; gap: 2px;
+    text-decoration: none;
+    padding: 11px 15px;
+    border: 1px solid var(--edge);
+    background: var(--raised);
+    border-radius: 8px;
+    min-width: 150px;
+    max-width: 48%;
+    transition: border-color .15s, transform .15s;
+  }
+  .pager a:hover { border-color: var(--steel); transform: translateY(-1px); }
+  .pager a .dir { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+  .pager a .ttl { font-size: 14px; color: var(--ink); }
+  .pager a.next { margin-left: auto; text-align: right; align-items: flex-end; }
+  .pager .spacer { flex: 1; }
+
+  .progress {
+    font-family: var(--mono); font-size: 11px; color: var(--faint);
+    margin-left: auto; padding-top: 4px;
+  }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--steel);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .hint {
+    font-family: var(--mono); font-size: 10.5px; color: var(--faint);
+    margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--divider);
+    line-height: 1.6;
+  }
+  kbd {
+    font-family: var(--mono); font-size: 10px;
+    border: 1px solid var(--edge); background: var(--raised);
+    border-radius: 4px; padding: 1px 5px; color: var(--muted);
+  }
+
+  /* ---- Narrow ---------------------------------------------------------- */
+  @media (max-width: 860px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .rail {
+      position: static; max-height: none; border-right: none;
+      border-bottom: 1px solid var(--divider);
+      padding-block: 20px 14px;
+      padding-inline: 16px;
+    }
+    .toc {
+      flex-direction: row; overflow-x: auto; gap: 6px;
+      padding-bottom: 4px; scrollbar-width: thin;
+    }
+    .toc a {
+      grid-template-columns: auto; gap: 0;
+      white-space: nowrap; border-left: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 6px 6px 0 0;
+      padding: 6px 10px;
+    }
+    .toc a[aria-current="page"] { border-left-color: transparent; border-bottom-color: var(--accent, var(--steel)); }
+    .toc a .n { display: none; }
+    main { padding-inline: 16px; padding-block: 22px 44px; }
+    .brand { margin-bottom: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+    .pager a:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ================= Chapter rail ================= -->
+  <nav class="rail" aria-label="Chapters">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" width="34" height="34" role="img" aria-label="Dayshift">
+      <defs>
+      <linearGradient id="hb-bg" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0f8196"/>
+      <stop offset="100%" stop-color="#7c4ee0"/>
+      </linearGradient>
+      <linearGradient id="hb-sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+      </defs>
+      <rect width="32" height="32" rx="8" fill="url(#hb-bg)"/>
+      <rect width="32" height="32" rx="8" fill="url(#hb-sheen)"/>
+      <path d="M 9.919 23.281 A 8.6 8.6 0 1 1 22.081 23.281" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M 9.919 23.281 A 8.6 8.6 0 1 1 23.402 12.822" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="16" y1="17.2" x2="20.648" y2="14.451" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="16" cy="17.2" r="2" fill="#ffffff"/>
+      </svg>
+      <div class="brand-text">
+        <span class="brand-name">Day<span>shift</span></span>
+        <span class="brand-sub">Handbook</span>
+      </div>
+    </div>
+
+    <div class="rail-label">Chapters</div>
+    <ul class="toc" id="toc">
+      <li><a href="#what"      data-ch="what"><span class="n">01</span><span>What Dayshift is</span></a></li>
+      <li><a href="#firstrun"  data-ch="firstrun"><span class="n">02</span><span>Your first run</span></a></li>
+      <li><a href="#dashboard" data-ch="dashboard"><span class="n">03</span><span>Reading the dashboard</span></a></li>
+      <li><a href="#logging"   data-ch="logging"><span class="n">04</span><span>Logging your time</span></a></li>
+      <li><a href="#targets"   data-ch="targets"><span class="n">05</span><span>Targets &amp; overrides</span></a></li>
+      <li><a href="#scores"    data-ch="scores"><span class="n">06</span><span>How scoring works</span></a></li>
+      <li><a href="#review"    data-ch="review"><span class="n">07</span><span>The weekly review</span></a></li>
+      <li><a href="#insights"  data-ch="insights"><span class="n">08</span><span>Insights over time</span></a></li>
+      <li><a href="#settings"  data-ch="settings"><span class="n">09</span><span>Settings &amp; your data</span></a></li>
+      <li><a href="#life"      data-ch="life"><span class="n">10</span><span>Practice, check-ins &amp; exams</span></a></li>
+      <li><a href="#plans"     data-ch="plans"><span class="n">11</span><span>Plans, goals &amp; your month</span></a></li>
+      <li><a href="#shortcuts" data-ch="shortcuts"><span class="n">12</span><span>Shortcuts &amp; quick actions</span></a></li>
+      <li><a href="#trouble"   data-ch="trouble"><span class="n">13</span><span>When something breaks</span></a></li>
+    </ul>
+
+    <p class="hint">
+      <kbd>←</kbd> <kbd>→</kbd> to page through chapters.
+    </p>
+  </nav>
+
+  <!-- ================= Chapters ================= -->
+  <main id="main">
+
+    <!-- ---------- 01 ---------- -->
+    <section class="chapter" id="what" style="--chapter: var(--cat1-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 01 <span class="progress">1 / 13</span></div>
+      <h1>A tracker that tells you the truth about your week</h1>
+      <p class="standfirst">
+        Dayshift records how much discretionary time you actually spend on the things
+        you said mattered, and scores it against targets that change with the day of
+        the week. It runs entirely on your own machine.
+      </p>
+
+      <p>
+        It is deliberately <strong>not</strong> a to-do list. Nothing here is checked off.
+        There are no points, badges, levels or streak-freeze tokens — anything that
+        feels good to inflate works against the only thing this app is for, which is
+        an honest record.
+      </p>
+
+      <h2>The six things it tracks, in two domains</h2>
+      <div class="tablewrap panel" style="padding: 4px 6px;">
+        <table>
+          <thead>
+            <tr><th>Category</th><th>Daily target</th><th>Counts on</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="swatch" style="background: var(--cat1-b)"></span>SDE Project</td>
+              <td class="num">180 min</td>
+              <td class="num" style="color: var(--muted)">Mon Tue Wed &middot; Fri Sat Sun</td>
+            </tr>
+            <tr>
+              <td><span class="swatch" style="background: var(--cat2-b)"></span>AI Automation</td>
+              <td class="num">60 min</td>
+              <td class="num" style="color: var(--muted)">Mon Tue Wed &middot; Fri Sat Sun</td>
+            </tr>
+            <tr>
+              <td><span class="swatch" style="background: var(--cat3-b)"></span>Project Maintenance</td>
+              <td class="num">20 min</td>
+              <td class="num" style="color: var(--muted)">Sat Sun</td>
+            </tr>
+            <tr>
+              <td><span class="swatch" style="background: var(--cat4-b)"></span>DSA</td>
+              <td class="num">120 min <em>or</em> 2 questions</td>
+              <td class="num" style="color: var(--muted)">Every day</td>
+            </tr>
+            <tr>
+              <td><span class="swatch" style="background: var(--cat5-b)"></span>Exercise</td>
+              <td class="num">30 min</td>
+              <td class="num" style="color: var(--muted)">Every day</td>
+            </tr>
+            <tr>
+              <td><span class="swatch" style="background: var(--cat6-b)"></span>Coursework</td>
+              <td class="num">60 min</td>
+              <td class="num" style="color: var(--muted)">Every day</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Notice that <strong>Thursday is missing</strong> from the first two, and that
+        Project Maintenance only exists at weekends. That is the point: a day the
+        category isn't scheduled on can never count against you. Zero minutes of
+        Project Maintenance on a Tuesday is not a miss — it's a Tuesday.
+      </p>
+
+      <p>
+        The first three are the <strong>Projects</strong> domain; the last three are
+        <strong>Daily</strong>, and run every day including Thursday. The dashboard
+        shows one domain at a time — press <code>›</code> to slide to the other.
+        DSA finishes at 120 minutes <em>or</em> 2 questions, whichever you reach
+        first; a part-done day gets the further of the two, never both added:
+        1 question plus 30 minutes is 50%.
+      </p>
+
+      <div class="note">
+        <span class="tag">The core idea</span>
+        <p>
+          Every category has a <strong>par score</strong>: the minutes you logged
+          divided by the minutes you were supposed to log, over a rolling window.
+          100% means you did exactly what you said. Everything in the app is either
+          feeding that number or explaining it.
+        </p>
+      </div>
+
+      <h2>Colour, used consistently</h2>
+      <p>
+        Each category keeps one hue everywhere — the dot beside its name, its gauge
+        track, its heatmap. Performance uses a separate set (green / amber / orange)
+        that is never used for a category. So colour always answers one of two
+        questions, never both at once:
+      </p>
+      <div class="grid2">
+        <div class="panel">
+          <h3>Category hue</h3>
+          <p style="margin:0; font-size:14px; color: var(--muted)">
+            <em>Which</em> one is this? Teal, violet, pink for Projects; blue, olive, magenta for Daily.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>Status hue</h3>
+          <p style="margin:0; font-size:14px; color: var(--muted)">
+            <em>How well</em> is it going? Green, amber, orange.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- 02 ---------- -->
+    <section class="chapter" id="firstrun" hidden style="--chapter: var(--cat2-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 02 <span class="progress">2 / 13</span></div>
+      <h1>Your first run</h1>
+      <p class="standfirst">
+        One command starts everything. There is nothing to configure before you
+        begin — the app asks you to choose credentials the first time you open it.
+      </p>
+
+      <ol class="steps">
+        <li>
+          <div>
+            <strong>Run <code>./start.sh</code></strong> from the project folder.
+            It creates the Python environment, installs both sets of dependencies
+            on first run, starts the backend, then the frontend.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Open <code>http://localhost:5173</code></strong> — the script
+            prints it once both servers are up.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Choose a username and passcode.</strong> The username is 3–32
+            characters; the passcode is at least 8. You'll only see this screen once.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>You're in.</strong> Setup signs you straight through to the
+            dashboard. Sessions last <strong>14 days</strong>, so you won't be asked
+            again for a while.
+          </div>
+        </li>
+      </ol>
+
+      <h2>Where your credentials live</h2>
+      <p>
+        In a file called <code>auth.json</code> next to the app — not in the database,
+        and not in <code>.env</code>. Your passcode is stored as an argon2 hash; the
+        file is readable only by you.
+      </p>
+      <p>
+        It's kept out of the database on purpose. The app snapshots the database every
+        time it starts, so a credential stored in there would be copied into ten backup
+        files.
+      </p>
+
+      <div class="note warnish">
+        <span class="tag">There is no password reset</span>
+        <p>
+          Nobody can recover it for you, because there is no "nobody" — it's your
+          machine. If you forget the passcode, delete <code>auth.json</code> and the
+          app returns to this setup screen.
+        </p>
+        <p>
+          <strong>Your logged data is not affected.</strong> That lives separately, in
+          <code>dayshift.db</code>.
+        </p>
+      </div>
+
+      <h2>Coming back later</h2>
+      <p>
+        After the first run you'll get a sign-in screen asking for the username and
+        passcode instead. If you're already signed in you'll go straight to the
+        dashboard — use <strong>Sign out</strong> in the header to get back to the
+        sign-in screen.
+      </p>
+    </section>
+
+    <!-- ---------- 03 ---------- -->
+    <section class="chapter" id="dashboard" hidden style="--chapter: var(--cat3-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 03 <span class="progress">3 / 13</span></div>
+      <h1>Reading the dashboard</h1>
+      <p class="standfirst">
+        One domain at a time. The top half is a sliding window — this week's plan and
+        today's dials for three categories — and everything else waits one click away
+        in two tabbed blocks, so the page never shows you six things at once.
+      </p>
+
+      <figure class="shot">
+        <img src="img/dashboard-daily.png" alt="The Dayshift dashboard showing the Daily domain: a This week strip, three dials for DSA, Exercise and Coursework, a Par score block and a Timer block" loading="lazy">
+        <figcaption>The whole dashboard on the Daily domain. Top: the domain name and switcher. Then this week, today's dials, and the two tabbed blocks.</figcaption>
+      </figure>
+
+      <h2>The Today line</h2>
+      <p>
+        Just under the header, one row of chips: today's <strong>check-in</strong>,
+        your <strong>habits</strong> (tick them right there), today's
+        <strong>plan</strong>, DSA problems <strong>due for revision</strong>, and
+        anything on the <strong>agenda</strong> in the next two weeks. Each chip leads
+        to where the detail lives — Chapters 10 and 11.
+      </p>
+
+      <h2>Domains — the sliding window</h2>
+      <p>
+        Your six categories live in two domains. <strong>Projects</strong> holds SDE
+        Project, AI Automation and Project Maintenance; <strong>Daily</strong> holds
+        DSA, Exercise and Coursework. Press <kbd class="k">›</kbd> and the window
+        slides to the other three. <kbd class="k">‹</kbd>, the pills, the
+        <kbd class="k">[</kbd> <kbd class="k">]</kbd> keys and a swipe on a phone all
+        do the same. The app remembers where you left it.
+      </p>
+
+      <figure class="shot">
+        <img src="img/domain-switcher.png" alt="The domain switcher: Daily 2 of 2, pills reading Projects rest and Daily 1/3, and previous and next buttons" loading="lazy">
+        <figcaption>Each pill says how that domain is doing <em>today</em>: <code>1/3</code> means one of three scheduled categories is done, <code>done</code> means all of them, <code>rest</code> means nothing is scheduled today. You can see whether the other domain needs you without switching.</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="img/domain-projects.png" alt="The Projects domain on a Thursday: three dials all reading Rest day, with the SDE Project panel outlined in orange for three days below target" loading="lazy">
+        <figcaption>The Projects domain on a Thursday. All three read <em>Rest day</em> — nothing is owed — but SDE Project's border still carries its three-day warning, because that's about the week, not today.</figcaption>
+      </figure>
+
+      <h2>Two blocks, several windows each</h2>
+      <p>
+        Below the dials sit two blocks. The left holds <strong>Par score</strong> and
+        <strong>Weekly</strong>; the right holds <strong>Timer</strong>,
+        <strong>Log</strong> and <strong>Override</strong>. Only one tab per block is
+        shown, and each block remembers the tab you last used. Both follow the domain
+        you're on.
+      </p>
+
+      <figure class="shot">
+        <img src="img/tab-blocks.png" alt="The Par score block beside the Log block" loading="lazy">
+        <figcaption>Par score on the left, the Log tab on the right.</figcaption>
+      </figure>
+      <figure class="shot" style="max-width: 520px">
+        <img src="img/weekly-tab.png" alt="The Weekly tab: seven days of bars for DSA, Exercise and Coursework" loading="lazy">
+        <figcaption>The Weekly tab — seven days per category.</figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="tag">A running timer is never hidden</span>
+        <p>
+          If a session is recording, the Timer tab carries a pulsing dot whichever tab
+          is open — and the browser tab's title shows the clock (Chapter 04).
+        </p>
+      </div>
+
+      <h2>This week — the only instruction</h2>
+      <p>
+        <strong>128 min/day for 5 days.</strong> That is what's left of this week's
+        requirement, divided across the scheduled days you have left. It rounds up, so
+        following the number actually gets you there rather than landing a minute short.
+      </p>
+      <p>
+        Days you've already missed still count toward the requirement but not toward the
+        split — so miss Monday to Wednesday and Friday's number goes <em>up</em>. That's
+        the honest answer, not a punishment.
+      </p>
+
+      <h2>Today — the gauges</h2>
+      <p>Each dial carries three separate facts at once:</p>
+      <ul>
+        <li>The <strong>arc and the number</strong> are coloured by <em>today</em>. A day at 160% shows green even during a rough week.</li>
+        <li>The <strong>panel border</strong> carries the rolling warning state — amber, or orange with a slow pulse when it's serious.</li>
+        <li>The <strong>track behind the arc</strong> and the dot by the name are the category's own hue.</li>
+      </ul>
+
+      <h2>Par score — the trailing picture</h2>
+      <p>
+        A rolling 7-day score ending <em>yesterday</em>, with a trend arrow against the
+        previous window. Chapter 06 covers exactly what goes into it.
+      </p>
+
+      <h2>Weekly — the last seven days</h2>
+      <p>
+        One bar per day, coloured by that day's performance. A small
+        <strong style="color: var(--steel)">*</strong> marks a day whose target was
+        overridden, so an unusual day never reads as a real shortfall or surplus.
+      </p>
+      <p>
+        <strong>Click any day's bar</strong> to correct it on the spot — a small
+        editor opens under the chart with that day's typed minutes (and questions,
+        for DSA). Timed minutes are shown beside it and left alone.
+      </p>
+      <figure class="shot" style="max-width: 560px">
+        <img src="img/weekly-edit.png" alt="The Weekly tab with an editor open under the DSA chart for Friday, showing 115 minutes typed and a questions field" loading="lazy">
+        <figcaption>Editing Friday straight from the chart.</figcaption>
+      </figure>
+
+      <h2>Tucked away in <code>⋯</code></h2>
+      <p>
+        The header keeps Review, Insights, Practice, Agenda and Goals. Settings,
+        the monthly letter, the year in review, quick entry, <em>Today in full</em>,
+        the shortcut sheet, the command palette, the background rain switch and
+        <em>Sign out</em> live in the <code>⋯</code> menu at the end.
+      </p>
+      <figure class="shot narrow">
+        <img src="img/u-menu.png" alt="The ⋯ menu listing Today in full, Settings, Monthly letter, Year in review, Quick entry (phone), Keyboard shortcuts with the ? key, Command palette with ⌘K, Background rain: off, and Sign out" loading="lazy">
+        <figcaption>Every item is clickable — <em>Keyboard shortcuts</em> opens the same sheet as <kbd class="k">?</kbd>.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ---------- 04 ---------- -->
+    <section class="chapter" id="logging" hidden style="--chapter: var(--cat1-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 04 <span class="progress">4 / 13</span></div>
+      <h1>Logging your time</h1>
+      <p class="standfirst">
+        Two ways in, and they add together. You can measure time as it happens, type it
+        in afterwards, or do both on the same day.
+      </p>
+
+      <div class="grid2">
+        <div class="panel">
+          <h3>The timer</h3>
+          <p style="margin:0 0 8px; font-size:14px;">
+            Pick a category and it starts counting. Time is <strong>measured</strong>.
+          </p>
+          <p style="margin:0; font-size:13.5px; color: var(--muted)">
+            Add a note before you start and it's attached to the session.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>The log form</h3>
+          <p style="margin:0 0 8px; font-size:14px;">
+            Type minutes against a date. Time is <strong>recalled</strong>.
+          </p>
+          <p style="margin:0; font-size:13.5px; color: var(--muted)">
+            Backdate freely — for the evening you forgot to log.
+          </p>
+        </div>
+      </div>
+
+      <h2>Quick add — straight from the dial</h2>
+      <p>
+        Every dial has <kbd class="k">+15</kbd> and <kbd class="k">+30</kbd>. One
+        click adds that many minutes to today's typed total — no form, no date to pick.
+        For ten seconds afterwards the dial offers <strong>Undo</strong>, which takes
+        back exactly what was added.
+      </p>
+      <div class="shots2">
+        <figure class="shot">
+          <img src="img/quick-add.png" alt="The Coursework dial after a quick add, reading 40 of 60 minutes with the note +15 min added and an Undo link" loading="lazy">
+          <figcaption>After <code>+15</code>: 25 became 40, and Undo is on offer.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="img/dsa-gauge.png" alt="The DSA dial at 30 of 120 minutes, 50 percent, with one of two question pips filled and buttons +15, +30 and +1 Q" loading="lazy">
+          <figcaption>DSA also has <code>+1 Q</code>. The pips count questions.</figcaption>
+        </figure>
+      </div>
+
+      <h2>DSA — questions <em>or</em> minutes</h2>
+      <p>
+        DSA is finished at <strong>120 minutes or 2 questions</strong>, whichever you
+        reach first. A part-done day is credited the <em>further</em> of the two —
+        never both added together. Each question is worth 60 minutes of credit, so:
+      </p>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>30 min, 1 question</dt><dd>50% — the question is further</dd></div>
+          <div><dt>25 min, 2 questions</dt><dd>100% — done</dd></div>
+          <div><dt>90 min, 1 question</dt><dd>75% — the minutes are further</dd></div>
+        </dl>
+      </div>
+      <p>
+        The dial's number always shows the minutes you really worked; the arc and
+        percentage show the credit. Lifetime totals and records count real minutes
+        only, so a quick two-question day never inflates "time spent".
+      </p>
+
+      <h2>They add up — and the app shows its working</h2>
+      <p>
+        If the timer already captured 90 minutes today and you type 60 more, the day is
+        <strong>150</strong>. To make sure you never double-count what you already
+        measured, the form shows what the timer holds right next to the field:
+      </p>
+
+      <figure>
+        <svg viewBox="0 0 560 108" role="img" aria-label="The log entry row showing sixty typed minutes plus ninety timed minutes totalling one hundred and fifty">
+          <rect x="4" y="4" width="552" height="100" rx="8" fill="#22283a" stroke="#3a4263"/>
+          <text x="22" y="26" font-family="JetBrains Mono, monospace" font-size="10" fill="#9aa3bd" letter-spacing="1.4">LOG ENTRY</text>
+          <text x="22" y="56" font-family="Inter, sans-serif" font-size="11.5" fill="#9aa3bd">SDE Project</text>
+          <text x="118" y="56" font-family="JetBrains Mono, monospace" font-size="12" fill="#646d88">&gt;</text>
+          <rect x="134" y="42" width="60" height="22" rx="5" fill="#0a0b12" stroke="#3a4263"/>
+          <text x="164" y="57" font-family="JetBrains Mono, monospace" font-size="12" fill="#eef1fa" text-anchor="middle">60</text>
+          <text x="204" y="56" font-family="JetBrains Mono, monospace" font-size="10" fill="#646d88">min</text>
+          <text x="240" y="56" font-family="JetBrains Mono, monospace" font-size="10" fill="#646d88">target 180</text>
+          <text x="326" y="56" font-family="JetBrains Mono, monospace" font-size="10" fill="#34d399">+90 timed</text>
+          <line x1="22" y1="72" x2="538" y2="72" stroke="#2b3149"/>
+          <text x="22" y="92" font-family="JetBrains Mono, monospace" font-size="11" fill="#9aa3bd">60 typed</text>
+          <text x="98" y="92" font-family="JetBrains Mono, monospace" font-size="11" fill="#646d88">+</text>
+          <text x="116" y="92" font-family="JetBrains Mono, monospace" font-size="11" fill="#34d399">90 timed</text>
+          <text x="192" y="92" font-family="JetBrains Mono, monospace" font-size="11" fill="#646d88">=</text>
+          <text x="210" y="92" font-family="JetBrains Mono, monospace" font-size="11" fill="#eef1fa">150 counted today</text>
+        </svg>
+        <figcaption>The green <code>+90 timed</code> is telling you not to type 150.</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="img/log-unsaved.png" alt="The Log tab with Coursework changed to 40, an Unsaved label, and a warning offering to discard the change before opening the previous day" loading="lazy">
+        <figcaption>The log form. <code>‹ ›</code> step a day, <em>Today</em> jumps back. Typed numbers are marked <em>Unsaved</em>, and changing the date won't throw them away without asking.</figcaption>
+      </figure>
+      <ul>
+        <li><kbd class="k">⌘</kbd> / <kbd class="k">Ctrl</kbd> + <kbd class="k">Enter</kbd> records from any field.</li>
+        <li>If a quick add or the timer changes the same day while you're mid-edit, the form says so and offers <em>Reload the day</em> rather than letting Record overwrite it.</li>
+        <li>Left open past midnight, the form moves itself to the new today — unless you'd deliberately picked another date.</li>
+        <li>After <em>Record</em>, an <strong>Undo</strong> appears for 15 seconds and puts the day back exactly as it was.</li>
+      </ul>
+
+      <h2>Rules the timer follows</h2>
+      <figure class="shot narrow">
+        <img src="img/timer-running.png" alt="The Timer tab recording DSA at 42:47 with the note Sliding window problems, a Stop and record button and Discard" loading="lazy">
+        <figcaption>A session recording. The browser tab reads <code>● 0:42 DSA · Dayshift</code>, so you can see it from any other tab.</figcaption>
+      </figure>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Only one timer runs at a time</dt><dd>starting a second stops the first</dd></div>
+          <div><dt>A running timer counts nothing yet</dt><dd>minutes fix on stop</dd></div>
+          <div><dt>Elapsed time survives a refresh</dt><dd>derived from the start time</dd></div>
+          <div><dt>Left it running overnight?</dt><dd>use <strong>Discard</strong></dd></div>
+          <div><dt>Running over 3 hours</dt><dd>the timer asks if you stepped away</dd></div>
+        </dl>
+      </div>
+      <p>
+        <strong>Discard</strong> throws the session away entirely rather than recording
+        it. Use it without guilt — recording eight hours you didn't work is far worse
+        than recording nothing.
+      </p>
+
+      <h2>Focus blocks — a timer that stops itself</h2>
+      <p>
+        Above the category buttons, pick <strong>Open</strong> (runs until you stop it),
+        <strong>25</strong> or <strong>50</strong>. A 25 or 50 is a focus block: the
+        timer counts <em>down</em>, chimes at the end, and records exactly the planned
+        length — even if the laptop was asleep or the tab closed when it ran out. You
+        can still stop early; that records the real elapsed time.
+      </p>
+      <div class="grid2">
+        <figure class="shot">
+          <img src="img/u-timer-modes.png" alt="The Timer tab idle, with the modes Open, 25 and 50 (25 selected), a For list for linking the session to an exam, a note field, and one start button per category" loading="lazy">
+          <figcaption>Choose the length, and optionally an exam under <em>For</em>.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="img/u-focus-running.png" alt="A 25-minute Coursework focus block at 14:36 left, with a progress bar, the line for OS midterm · 4d left, the note Paging + TLB, and End early and record and Discard buttons" loading="lazy">
+          <figcaption>Mid-block: time left, a bar filling up, and the exam it counts towards.</figcaption>
+        </figure>
+      </div>
+      <p>
+        When the block ends, a short break countdown offers itself. It's optional and
+        records nothing — it's only there so the next block starts on purpose.
+      </p>
+      <p>
+        The <strong>For</strong> list links a session to an upcoming exam. That's how the
+        Agenda knows how many hours went into each one (Chapter 10).
+      </p>
+
+      <h2>Notes and tags</h2>
+      <p>
+        Before you start the timer, type a note and any tags. Minutes alone stop being
+        useful after about a month; <em>"auth refactor"</em> against 90 minutes is what
+        makes old data worth reading. Press <kbd class="k">Enter</kbd> or a comma to add a
+        tag; tags you've used before are suggested as you type. They're saved in
+        lowercase, up to 12 per session.
+      </p>
+      <figure class="shot">
+        <img src="img/s-timer-tags.png" alt="The Timer tab ready to start, with the note Rate limiter: sliding log, the tags backend and rate-limit as chips, the branch feature/rate-limiter, and a start button per category" loading="lazy">
+        <figcaption>Note, tags and branch are set before you start; all three show while it runs.</figcaption>
+      </figure>
+
+      <h3>Branch or issue</h3>
+      <p>
+        For project work, the small field beside the tags takes the git branch or
+        issue it was for — <code>feature/rate-limiter</code>, <code>#42</code>, anything
+        on one line. It's plain text: nothing is looked up, so it works with any repo,
+        or none. It shows under the note in the day view, and Search finds it.
+      </p>
+      <figure class="shot">
+        <img src="img/g-day.png" alt="Two SDE Project sessions in the day view, each with a branch line under its note: feature/rate-limiter and #42" loading="lazy">
+        <figcaption>Months later, "what was that 95 minutes?" has an answer.</figcaption>
+      </figure>
+      <p>
+        If the category has git repositories linked (Chapter 11, <em>Git vs logged</em>),
+        the day view also counts your commits that day on that branch — or, for an
+        issue like <code>#42</code>, commits whose message mentions it:
+      </p>
+      <figure class="shot">
+        <img src="img/n-day-commits.png" alt="A session with the branch feature/rate-limiter and the note 5 commits that day" loading="lazy">
+        <figcaption>Read locally with <code>git log</code>. A branch's count includes that day's commits it shares with the branch it came from.</figcaption>
+      </figure>
+
+      <h2>Fixing a session afterwards</h2>
+      <p>
+        Open <em>Today in full</em> from the <code>⋯</code> menu (its
+        <em>← Prev</em> link steps back through earlier days) and press
+        <strong>edit</strong> on a session. You can change its
+        category, minutes, note, tags, branch and the exam it counts toward, or
+        <strong>split</strong> it in two — for a block that covered two things. Both
+        halves keep the note, tags and exam.
+      </p>
+      <figure class="shot">
+        <img src="img/s-editor.png" alt="A DSA session open in the editor: category, minutes changed from 50 to 45 with a warning that the session will be marked as edited and the timer's 50 minutes stay on record, note, tags, For, Split after, Cancel and Save" loading="lazy">
+        <figcaption>The warning appears as soon as you change a timed session's minutes — before you save.</figcaption>
+      </figure>
+      <div class="note warnish">
+        <span class="tag">Changing timed minutes marks the session edited</span>
+        <p>
+          A number you changed by hand is no longer a measurement. So when you change
+          the minutes of a session the timer recorded, it's relabelled
+          <strong>edited</strong>, and the timer's own reading is kept beside it. The
+          new number is what counts; the old one is never lost.
+        </p>
+        <p>
+          Changing the note, tags, category or exam, or splitting a session, doesn't
+          touch that — none of them changes how long you worked.
+        </p>
+      </div>
+      <figure class="shot">
+        <img src="img/s-edited.png" alt="An SDE Project session from 09:00 to 10:35 showing 80 min (edited · timer 95), with the note Rate limiter: token bucket and tags backend and rate-limit" loading="lazy">
+        <figcaption>A timer left running over lunch, trimmed to 80. The clock range and <code>timer 95</code> still show what was measured.</figcaption>
+      </figure>
+
+      <h3>Merging sessions</h3>
+      <p>
+        The opposite of splitting: a timer you stopped for a coffee and restarted, or a
+        block you logged in pieces. When a category has two or more sessions on a
+        day, <strong>merge…</strong> appears beside its totals. Tick the sessions and
+        press <em>Merge</em>. The minutes add up — a 50 and a 40 with a break between
+        make 90, not the 105-minute clock span — and notes, tags and branches are
+        combined.
+      </p>
+      <figure class="shot">
+        <img src="img/m-refused.png" alt="Merge mode for SDE Project with the 09:00 and 13:00 sessions ticked and the 10:05 one not, refused with the message Another session was recorded in between (10:05-10:45, SDE Project); the merged block would overlap it." loading="lazy">
+        <figcaption>A gap is fine; another session inside it isn't.</figcaption>
+      </figure>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Same category, same day</dt><dd>required</dd></div>
+          <div><dt>A gap between them</dt><dd>fine, if nothing else was recorded in it</dd></div>
+          <div><dt>Linked to different exams (or only some)</dt><dd>refused — set the same exam on each first</dd></div>
+          <div><dt>Running, or no time of day</dt><dd>can't be ticked</dd></div>
+          <div><dt>All parts timed</dt><dd>the result stays measured; otherwise <code>(manual)</code></dd></div>
+        </dl>
+      </div>
+      <p>
+        The exam rule is there so an exam's studied hours never change without you
+        noticing: merging only ever joins time that already counts toward the same
+        thing.
+      </p>
+
+      <h3>Undo — now or later</h3>
+      <p>
+        Deleting, editing, splitting or merging a session shows an
+        <strong>Undo</strong> bar for 15 seconds. Nothing is lost when it goes: every
+        one of those changes is kept, with the sessions as they were before, so a
+        deleted session can still be put back later from the honesty ledger
+        (Chapter 07).
+      </p>
+      <figure class="shot">
+        <img src="img/n-undo.png" alt="An Undo bar reading Deleted a 40-min SDE Project session, above the day's SDE Project panel" loading="lazy">
+        <figcaption>A deleted session stops counting at once — and comes back exactly as it was, same timer label, tags and exam.</figcaption>
+      </figure>
+      <p>
+        Undo refuses, and says why, when it would lose or double-count something: if a
+        session it would replace has been changed since (undo that later change
+        first), or if putting a session back would overlap one you've recorded since.
+      </p>
+
+      <h2>Adding a session you didn't time</h2>
+      <p>
+        Forgot the timer? In the day view, press <strong>+ Add a session</strong> and
+        give the category, when it started and ended, and optionally a note, tags, a
+        branch and an exam. It's saved as <code>(manual)</code> — remembered, not measured — and
+        counts the same as any other session.
+      </p>
+      <figure class="shot">
+        <img src="img/a-overlap.png" alt="The Add a session form: Coursework from 9:30 to 10:45 AM, 1h 15m, note OS notes: paging, refused with the message Overlaps a session already recorded (09:00-10:00, DSA). The same minutes can't count twice." loading="lazy">
+        <figcaption>It won't overlap anything already recorded, and says which session is in the way.</figcaption>
+      </figure>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Overlaps a recorded session</dt><dd>refused — you can't do two things at once</dd></div>
+          <div><dt>Ends right as another starts</dt><dd>fine</dd></div>
+          <div><dt>Hasn't finished yet</dt><dd>refused — add it after, or use the timer</dd></div>
+          <div><dt>Runs past midnight</dt><dd>add one session per day</dd></div>
+        </dl>
+      </div>
+      <p>
+        The overlap rule is the same one the timer follows: only one thing runs at a
+        time, so no minute is counted twice. If a block really did overlap, the
+        session already there is wrong — edit or split it first.
+      </p>
+
+      <div class="note goodish">
+        <span class="tag">Typed and timed stay apart</span>
+        <p>
+          Minutes from the log form or quick add are stored separately from sessions,
+          and the day view shows them apart — <code>45 entered · 90 timed</code> — so
+          your history always says which minutes were remembered. <em>Timed</em> counts
+          every session, edited ones included; the <code>(edited)</code> and
+          <code>(manual)</code> labels on each session say which ones weren't measured.
+        </p>
+      </div>
+    </section>
+
+    <!-- ---------- 05 ---------- -->
+    <section class="chapter" id="targets" hidden style="--chapter: var(--cat2-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 05 <span class="progress">5 / 13</span></div>
+      <h1>Targets &amp; overrides</h1>
+      <p class="standfirst">
+        Targets are permanent expectations. Overrides are exceptions for one day. The
+        difference matters, and the app is careful about it.
+      </p>
+
+      <h2>Changing a target never rewrites your history</h2>
+      <p>
+        Targets are <strong>dated</strong>. When you lower SDE Project from 180 to 120,
+        that applies from the date you pick <em>forward</em>. Every day already scored
+        keeps the target that was in force when you lived it.
+      </p>
+      <p>
+        Without that, the same 450 logged minutes would read as 83.3% at a 180 target
+        and 125% at 120 — your past would silently improve every time you lowered the
+        bar. Settings shows the full target history for each category.
+      </p>
+
+      <h2>Overrides: one day, one exception</h2>
+      <p>
+        An override replaces the target for a single date — a travel day, an exam, a
+        clash. It never touches the permanent target, and the next day goes back to
+        normal on its own.
+      </p>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Override of <strong>0</strong></dt><dd>opts the day out entirely</dd></div>
+          <div><dt>Override on an unscheduled day</dt><dd>opts that day <em>in</em></dd></div>
+          <div><dt>Days with an override</dt><dd>marked <span style="color:var(--steel)">*</span> on the weekly chart</dd></div>
+        </dl>
+      </div>
+
+      <h2>Before or after — the app can tell</h2>
+      <figure>
+        <svg viewBox="0 0 560 150" role="img" aria-label="Timeline comparing an override set in advance with one set after the day had passed">
+          <!-- advance -->
+          <text x="8" y="18" font-family="JetBrains Mono, monospace" font-size="10" fill="#34d399" letter-spacing="1.2">SET IN ADVANCE — PLANNING</text>
+          <line x1="12" y1="42" x2="530" y2="42" stroke="#3a4263" stroke-width="1.5"/>
+          <circle cx="120" cy="42" r="6" fill="#34d399"/>
+          <text x="120" y="66" font-family="JetBrains Mono, monospace" font-size="9" fill="#9aa3bd" text-anchor="middle">you set it</text>
+          <circle cx="400" cy="42" r="6" fill="none" stroke="#9aa3bd" stroke-width="1.5"/>
+          <text x="400" y="66" font-family="JetBrains Mono, monospace" font-size="9" fill="#9aa3bd" text-anchor="middle">the exam day</text>
+          <path d="M 130 42 L 390 42" stroke="#34d399" stroke-width="2"/>
+          <text x="470" y="46" font-family="JetBrains Mono, monospace" font-size="9" fill="#34d399">not logged</text>
+
+          <!-- retroactive -->
+          <text x="8" y="100" font-family="JetBrains Mono, monospace" font-size="10" fill="#fbbf24" letter-spacing="1.2">SET AFTERWARDS — RECORDED</text>
+          <line x1="12" y1="124" x2="530" y2="124" stroke="#3a4263" stroke-width="1.5"/>
+          <circle cx="160" cy="124" r="6" fill="none" stroke="#9aa3bd" stroke-width="1.5"/>
+          <text x="160" y="148" font-family="JetBrains Mono, monospace" font-size="9" fill="#9aa3bd" text-anchor="middle">the day you missed</text>
+          <circle cx="400" cy="124" r="6" fill="#fbbf24"/>
+          <text x="400" y="148" font-family="JetBrains Mono, monospace" font-size="9" fill="#fbbf24" text-anchor="middle">you lower it</text>
+          <path d="M 170 124 L 390 124" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4 3"/>
+          <text x="470" y="128" font-family="JetBrains Mono, monospace" font-size="9" fill="#fbbf24">logged</text>
+        </svg>
+        <figcaption>Only the second case reaches the honesty ledger in Chapter 07.</figcaption>
+      </figure>
+
+      <h2>A whole exam week at once</h2>
+      <p>
+        Tick <strong>Apply across a date range</strong> in the Schedule override panel,
+        pick an end date, and optionally include other categories. Only days the
+        category is actually scheduled on get touched, so a weekend-only category won't
+        sprout weekday rows.
+      </p>
+      <p>
+        Setting a fortnight one day at a time is exactly the kind of friction that stops
+        a tracker getting opened at all.
+      </p>
+
+      <h2>Presets — sick, travel, festival, half day</h2>
+      <figure class="shot">
+        <img src="img/u-presets.png" alt="The Override tab after clicking Sick day: every category selected, target 0, and the reason Sick day filled in, waiting for Set override" loading="lazy">
+        <figcaption>A preset only fills the form. Nothing is saved until you press <em>Set</em>.</figcaption>
+      </figure>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Sick day · Travel · Festival</dt><dd>every category at 0, reason filled in</dd></div>
+          <div><dt>Half day</dt><dd>each category at half its own target</dd></div>
+          <div><dt>Rest days</dt><dd>left alone — a preset never creates an obligation</dd></div>
+        </dl>
+      </div>
+      <p>
+        Adjust anything before saving: drop a category, pick a range, change the
+        reason. The reason shows up later in the honesty ledger and the day view.
+      </p>
+
+      <h2>When a target has stopped fitting</h2>
+      <p>
+        The weekly review has a <strong>Target check</strong>. If a category has been at
+        or above 110% every week for four complete weeks, it suggests raising the
+        target; at or below 60% for four weeks, lowering it. The suggested number is
+        your real average per scheduled day, rounded to 5 minutes, starting next Monday.
+      </p>
+      <figure class="shot">
+        <img src="img/u-target-check.png" alt="The Target check in the weekly review suggesting Exercise be raised from 30 to 45 minutes from Monday, with the four weekly percentages, a Raise button and Keep 30" loading="lazy">
+        <figcaption>Evidence first — the four weeks behind the suggestion — then <em>Raise</em> or <em>Keep</em>.</figcaption>
+      </figure>
+      <p>
+        It is only ever a suggestion. <em>Raise</em> (or <em>Lower</em>) adds a dated
+        target, so your past keeps the old one; <em>Keep</em> hides the suggestion. The thresholds live in
+        Settings → Suggestions.
+      </p>
+    </section>
+
+    <!-- ---------- 06 ---------- -->
+    <section class="chapter" id="scores" hidden style="--chapter: var(--cat3-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 06 <span class="progress">6 / 13</span></div>
+      <h1>How scoring works</h1>
+      <p class="standfirst">
+        Par is one division: minutes you logged over minutes you owed. Everything
+        interesting is in which days get counted.
+      </p>
+
+      <div class="panel" style="text-align:center; padding-block: 24px;">
+        <div style="font-family: var(--mono); font-size: clamp(13px, 3vw, 17px); color: var(--ink); line-height: 2;">
+          <span style="color: var(--healthy)">minutes logged</span>
+          <span style="color: var(--faint)"> &divide; </span>
+          <span style="color: var(--cat2-b)">minutes owed</span>
+          <span style="color: var(--faint)"> &times; 100</span>
+        </div>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--faint); margin-top: 6px;">
+          over the last 7 calendar days, ending yesterday
+        </div>
+      </div>
+
+      <h2>Which days count</h2>
+      <div class="tablewrap panel" style="padding: 4px 6px;">
+        <table>
+          <thead><tr><th>Situation</th><th>Counted?</th></tr></thead>
+          <tbody>
+            <tr><td>A scheduled day you logged</td><td class="num" style="color: var(--healthy)">Yes</td></tr>
+            <tr><td>A scheduled day you forgot</td><td class="num" style="color: var(--warn)">Yes — as zero</td></tr>
+            <tr><td>A day the category isn't scheduled</td><td class="num" style="color: var(--faint)">No</td></tr>
+            <tr><td>A day with any override</td><td class="num" style="color: var(--healthy)">Yes, at the override</td></tr>
+            <tr><td>Anything before your tracking start date</td><td class="num" style="color: var(--faint)">No</td></tr>
+            <tr><td>Today</td><td class="num" style="color: var(--faint)">No — see below</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        <strong>Absence is a zero, not an excuse.</strong> A scheduled day with no entry
+        counts against you at the full target. That's the whole point — otherwise
+        forgetting to log would quietly improve your score.
+      </p>
+
+      <div class="note">
+        <span class="tag">Why today is left out</span>
+        <p>
+          Today is unfinished. Including it would make par read terribly at 9am and
+          recover by evening, and could trip a warning on a day that isn't over. Your
+          live progress is already on the gauges; par is the stable trailing number.
+        </p>
+      </div>
+
+      <h2>Warning states</h2>
+      <p>
+        A category's border changes colour when it's been under for a while. There are
+        no popups, toasts or alerts anywhere in this app — the border <em>is</em> the
+        warning.
+      </p>
+      <div class="tablewrap panel" style="padding: 4px 6px;">
+        <table>
+          <thead><tr><th>State</th><th>Trigger</th><th>Shows as</th></tr></thead>
+          <tbody>
+            <tr><td><span class="swatch" style="background: var(--healthy)"></span>Healthy</td><td>Everything else</td><td class="num" style="color: var(--muted)">plain border</td></tr>
+            <tr><td><span class="swatch" style="background: var(--warn)"></span>Warning</td><td class="num">2+ days under 80%</td><td class="num" style="color: var(--warn)">amber border</td></tr>
+            <tr><td><span class="swatch" style="background: var(--critical)"></span>Critical</td><td class="num">3+ days, or par under 50%</td><td class="num" style="color: var(--critical)">orange, slow pulse</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        The consecutive-day count <strong>steps over</strong> days the category isn't
+        scheduled on. A bad Wednesday and a bad Friday count as two in a row even though
+        Thursday sits between them — because Thursday was never a day you were meant to
+        work. A scheduled day off can't launder a warning.
+      </p>
+
+      <div class="note warnish">
+        <span class="tag">Nothing here is enforced</span>
+        <p>
+          You can lower a target after a bad day and make a warning disappear. The app
+          won't stop you — there's no one to stop you from. What it does instead is
+          keep a visible record, which is Chapter 07.
+        </p>
+      </div>
+    </section>
+
+    <!-- ---------- 07 ---------- -->
+    <section class="chapter" id="review" hidden style="--chapter: var(--cat1-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 07 <span class="progress">7 / 13</span></div>
+      <h1>The weekly review</h1>
+      <p class="standfirst">
+        Once a week, at <code>/review</code>. It opens on the week that just finished —
+        reviewing a week still running is guessing.
+      </p>
+
+      <figure class="shot">
+        <img src="img/review-domain.png" alt="The weekly review on the Daily domain: DSA 97 percent, Exercise 69 percent, Coursework 93 percent" loading="lazy">
+        <figcaption>The review pages by domain too. The total reads both ways: this domain's hours, and the week overall.</figcaption>
+      </figure>
+
+      <h2>Where the week went</h2>
+      <p>
+        Under <em>What it produced</em>: the week's top tags and branches by time. Click
+        a tag to see its sessions in Search.
+      </p>
+      <figure class="shot">
+        <img src="img/n-where.png" alt="Where the week went: tags backend 10h 45m, auth 6h 15m, dp 5h 50m and more, then branches feature/auth 6h 15m and feature/rate-limiter 4h 30m" loading="lazy">
+        <figcaption>Only shown when the week had tagged or branch-linked time.</figcaption>
+      </figure>
+
+      <h2>Commitments — what you said you'd do</h2>
+      <p>
+        Before or during a week, put a number against each category. At the end you see
+        promise against reality:
+      </p>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt><span class="swatch" style="background: var(--cat1-b)"></span>SDE Project</dt><dd><span style="color: var(--critical)">short 183 &middot; did 717</span></dd></div>
+          <div><dt><span class="swatch" style="background: var(--cat2-b)"></span>AI Automation</dt><dd><span style="color: var(--healthy)">kept &middot; did 340 (+40)</span></dd></div>
+          <div><dt><span class="swatch" style="background: var(--cat3-b)"></span>Project Maintenance</dt><dd><span style="color: var(--faint)">nothing promised</span></dd></div>
+        </dl>
+      </div>
+      <p>
+        A commitment is <em>not</em> a target. The target is the standing expectation;
+        the commitment is what you claimed, that week, you'd actually manage. The gap
+        between the two is the interesting number.
+      </p>
+
+      <h2>Reflection — the part only you can supply</h2>
+      <p>
+        A text box, stored per week, readable forever. The numbers are computed; what
+        got in the way isn't. <em>"Lost Tuesday to a lab that overran; mornings worked
+        better than evenings"</em> is the sort of thing that changes next week.
+      </p>
+
+      <h2>Records</h2>
+      <p>
+        Current streak, longest streak, best day, best week, lifetime total. Facts, not
+        points. An <strong>unfinished today never breaks a streak</strong> — and never
+        flatters one either. Today only counts once it already meets target.
+      </p>
+
+      <h2>The honesty ledger</h2>
+      <p>
+        At the bottom: every target you changed <em>after</em> the day it governed, how
+        many days later, and whether it lowered the bar.
+      </p>
+      <div class="panel" style="border-left: 3px solid var(--warn);">
+        <div style="display:flex; flex-wrap:wrap; gap:6px 16px; justify-content:space-between; align-items:baseline;">
+          <div>
+            <div style="font-family: var(--mono); font-size: 12.5px; color: var(--ink);">2026&#8209;09&#8209;16 &nbsp;<span style="color:var(--muted); font-family: var(--sans);">SDE Project</span></div>
+            <div style="font-size: 12.5px; color: var(--faint);">Migraine</div>
+          </div>
+          <div style="font-family: var(--mono); font-size: 12px;">
+            <span style="color: var(--faint)">180</span>
+            <span style="color: var(--warn)"> &rarr; 45 min</span>
+            <span style="color: var(--faint)"> &nbsp;6d later</span>
+          </div>
+        </div>
+      </div>
+      <p>
+        This undoes nothing and blocks nothing. An override you set in advance never
+        appears here. It exists so that lowering the bar after the fact is a thing you
+        <em>decided</em> to do, rather than something that happened invisibly.
+      </p>
+
+      <h3>Sessions changed after the day</h3>
+      <p>
+        The same idea for recorded time: a session deleted, or its minutes changed, on
+        a later day than its own. Deleted sessions are kept, so each one can be
+        <strong>restored</strong> from here; an edit can be <strong>undone</strong>.
+        Same-day fixes, splits and merges aren't listed — they don't rewrite a
+        finished day.
+      </p>
+      <figure class="shot">
+        <img src="img/n-ledger.png" alt="Sessions changed after the day: a 40-minute SDE session deleted and restored, a session changed from 120 to 90 minutes three days later with an undo button, and a 45-minute DSA session deleted with a restore button; 1h 15m removed across 2" loading="lazy">
+        <figcaption>The corner totals the time still removed; restored ones are greyed.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ---------- 08 ---------- -->
+    <section class="chapter" id="insights" hidden style="--chapter: var(--cat2-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 08 <span class="progress">8 / 13</span></div>
+      <h1>Insights over time</h1>
+      <p class="standfirst">
+        At <code>/insights</code>, over 30, 90 or 365 days. This is where you find out
+        whether you're actually better than you were in October.
+      </p>
+
+      <figure class="shot">
+        <img src="img/insights-domain.png" alt="Insights on the Daily domain: a heatmap per category" loading="lazy">
+        <figcaption>Insights follows the same domain switcher; the time-of-day pattern covers all domains.</figcaption>
+      </figure>
+
+      <h2>The heatmap</h2>
+      <figure>
+        <svg viewBox="0 0 400 108" role="img" aria-label="Heatmap grid: one column per week, one cell per day, darker cells meaning less time logged">
+          <text x="2" y="12" font-family="JetBrains Mono, monospace" font-size="8.5" fill="#646d88">Aug</text>
+          <g>
+            <rect x="24" y="20" width="13" height="13" rx="3" fill="#0f4a58"/><rect x="40" y="20" width="13" height="13" rx="3" fill="#1295ab"/><rect x="56" y="20" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="72" y="20" width="13" height="13" rx="3" fill="#116d7f"/><rect x="88" y="20" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="104" y="20" width="13" height="13" rx="3" fill="#1295ab"/>
+            <rect x="24" y="36" width="13" height="13" rx="3" fill="#1295ab"/><rect x="40" y="36" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="56" y="36" width="13" height="13" rx="3" fill="#0c2a33"/><rect x="72" y="36" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="88" y="36" width="13" height="13" rx="3" fill="#116d7f"/><rect x="104" y="36" width="13" height="13" rx="3" fill="#22d3ee"/>
+            <rect x="24" y="52" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="40" y="52" width="13" height="13" rx="3" fill="#116d7f"/><rect x="56" y="52" width="13" height="13" rx="3" fill="#1295ab"/><rect x="72" y="52" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="88" y="52" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="104" y="52" width="13" height="13" rx="3" fill="#0f4a58"/>
+            <rect x="24" y="68" width="13" height="13" rx="3" fill="none" stroke="#3a4263"/><rect x="40" y="68" width="13" height="13" rx="3" fill="none" stroke="#3a4263"/><rect x="56" y="68" width="13" height="13" rx="3" fill="none" stroke="#3a4263"/><rect x="72" y="68" width="13" height="13" rx="3" fill="none" stroke="#3a4263"/><rect x="88" y="68" width="13" height="13" rx="3" fill="none" stroke="#3a4263"/><rect x="104" y="68" width="13" height="13" rx="3" fill="none" stroke="#3a4263"/>
+            <rect x="24" y="84" width="13" height="13" rx="3" fill="#1295ab"/><rect x="40" y="84" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="56" y="84" width="13" height="13" rx="3" fill="#116d7f"/><rect x="72" y="84" width="13" height="13" rx="3" fill="#22d3ee"/><rect x="88" y="84" width="13" height="13" rx="3" fill="#1295ab"/><rect x="104" y="84" width="13" height="13" rx="3" fill="#22d3ee"/>
+          </g>
+          <text x="6" y="31" font-family="JetBrains Mono, monospace" font-size="8" fill="#646d88">M</text>
+          <text x="6" y="63" font-family="JetBrains Mono, monospace" font-size="8" fill="#646d88">W</text>
+          <text x="6" y="79" font-family="JetBrains Mono, monospace" font-size="8" fill="#646d88">T</text>
+          <text x="6" y="95" font-family="JetBrains Mono, monospace" font-size="8" fill="#646d88">F</text>
+          <text x="150" y="42" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#9aa3bd">Darker = less logged.</text>
+          <text x="150" y="58" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#9aa3bd">Hollow = not scheduled.</text>
+          <text x="150" y="74" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#646d88">One hue per category —</text>
+          <text x="150" y="88" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#646d88">never a rainbow.</text>
+        </svg>
+        <figcaption>The empty row is Thursday. Gaps are meant to be findable at a glance.</figcaption>
+      </figure>
+
+      <h2>Consistency — the number par can't tell you</h2>
+      <p>
+        180 minutes every day and 1,260 minutes in one Sunday give you
+        <strong>exactly the same par score</strong>. They are not the same habit, and
+        only one of them survives a busy week.
+      </p>
+      <p>
+        The consistency score is 100 minus how much your days vary. High means steady;
+        low means feast and famine. It's shown alongside your best streak, best day and
+        spread.
+      </p>
+
+      <h2>Time by tag</h2>
+      <p>
+        Where the hours went, one level below the category: every tag's time over the
+        page's period (30, 90 or 365 days), each bar split by the categories it came
+        from. Click a tag to see every session behind it in Search.
+      </p>
+      <figure class="shot">
+        <img src="img/t-tags.png" alt="The Time by tag panel: bars for os, backend, dp, agents, arrays and more, each with its hours and session count, and a line saying 72h 10m of 84h 30m timed is tagged" loading="lazy">
+        <figcaption>Longest first. The corner says how much of your timed work carries a tag at all.</figcaption>
+      </figure>
+      <p>
+        A session tagged both <code>dp</code> and <code>arrays</code> counts toward both
+        bars, so the bars can add up to more than the period — that's what overlapping
+        labels mean, and the panel says so rather than splitting the time arbitrarily.
+        Only sessions count; minutes typed into the log form have no tags.
+      </p>
+
+      <h2>Focus blocks</h2>
+      <p>
+        How your 25- and 50-minute blocks went over the period: how many ran to the
+        end, and how long the early ones lasted. An early stop isn't a failure — if
+        50s keep ending at 30, the 25s might simply suit you better.
+      </p>
+      <figure class="shot">
+        <img src="img/n-focus.png" alt="Focus blocks: 6 blocks, 4 run to the end (67%), 2 ended early after 22 minutes on average, 2h 48m of focused time; 25 min 3 of 4 finished, 50 min 1 of 2" loading="lazy">
+      </figure>
+
+      <h2>Searching your sessions</h2>
+      <p>
+        Press <kbd class="k">/</kbd> anywhere (or <em>Search sessions</em> in the
+        <code>⋯</code> menu). Type part of a note, a branch or a tag, and every matching session
+        comes back newest first, with the words you typed marked and a total at the
+        top. Click a tag on any result to narrow to <em>exactly</em> that tag; click a
+        date to open that day, where the session can be edited.
+      </p>
+      <figure class="shot">
+        <img src="img/t-search.png" alt="Search for limiter: 5 sessions totalling 5h 15m, each an SDE Project session with the note Rate limiter: token bucket, the word limiter highlighted, tags backend and rate-limit, and its date and start time" loading="lazy">
+        <figcaption>"How long did the rate limiter actually take?" — five sessions, 5h 15m.</figcaption>
+      </figure>
+      <p>
+        The search is in the address bar (<code>/search?q=limiter</code>), so a search
+        you run often can be bookmarked, and Back returns to the previous one.
+      </p>
+
+      <h2>What else is there</h2>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Trend</dt><dd>daily line + 7-day average</dd></div>
+          <div><dt>By weekday</dt><dd>which days you actually deliver</dd></div>
+          <div><dt>Time of day</dt><dd>from timed sessions only</dd></div>
+          <div><dt>Period comparison</dt><dd>this stretch vs the one before</dd></div>
+        </dl>
+      </div>
+      <p>
+        The trend line <strong>breaks</strong> on days you weren't scheduled rather than
+        dropping to zero — a rest day should never look like a collapse.
+      </p>
+      <p>
+        Time of day only counts sessions that carry a real clock time. A total you typed
+        in for "yesterday" has no hour attached, and inventing one would be making up
+        a pattern you never recorded.
+      </p>
+    </section>
+
+    <!-- ---------- 09 ---------- -->
+    <section class="chapter" id="settings" hidden style="--chapter: var(--cat3-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 09 <span class="progress">9 / 13</span></div>
+      <h1>Settings &amp; your data</h1>
+      <p class="standfirst">
+        Everything that used to need a text editor is in <code>/settings</code>. Nothing
+        requires touching the database.
+      </p>
+
+      <h2>Categories</h2>
+      <ul>
+        <li><strong>Rename</strong> or <strong>reorder</strong> them freely.</li>
+        <li><strong>Add</strong> a new one with its own target and schedule.</li>
+        <li><strong>Archive</strong> rather than delete — archived categories vanish from the dashboard but keep every entry. Deleting would destroy history.</li>
+        <li><strong>Retarget</strong> from a chosen date forward, with the full history listed underneath.</li>
+        <li><strong>Move</strong> a category to another domain, or type a new domain name to create one.</li>
+        <li>Give a category a <strong>question target</strong> as a second finish line, like DSA's 2. Setting it to 0 removes it from that date forward.</li>
+      </ul>
+      <figure class="shot">
+        <img src="img/settings-categories.png" alt="The Categories panel in Settings listing all six categories with their target, days and domain" loading="lazy">
+        <figcaption>Each row shows the target, the days it applies and the domain. DSA reads <code>120 min or 2 Q</code>.</figcaption>
+      </figure>
+      <p>
+        Backdating a target is allowed but warned about, because it genuinely does
+        change how past days are judged.
+      </p>
+
+      <h2>Scoring</h2>
+      <p>These change how <em>every</em> score is calculated, including past ones:</p>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Tracking start</dt><dd>nothing before this counts</dd></div>
+          <div><dt>Par window</dt><dd>7 days by default</dd></div>
+          <div><dt>Include today in par</dt><dd>off, for good reason</dd></div>
+          <div><dt>Warning / critical thresholds</dt><dd>80% and 50%</dd></div>
+          <div><dt>Consecutive days to trigger</dt><dd>2 and 3</dd></div>
+          <div><dt>Weekly chart span</dt><dd>7 days</dd></div>
+        </dl>
+      </div>
+      <p>
+        Settings come in three groups — <em>Scoring</em>, <em>Suggestions</em> and
+        <em>Backups &amp; reminders</em> — each with its own Save and Reset, so resetting
+        one never touches another. If one value in a save is invalid the whole save is
+        rejected, so your settings are never left half-applied.
+      </p>
+      <figure class="shot">
+        <img src="img/u-settings-suggestions.png" alt="The Suggestions settings group: suggest raising above 110%, lowering below 60%, over 4 weeks" loading="lazy">
+        <figcaption>The thresholds behind the weekly review's Target check (Chapter 05).</figcaption>
+      </figure>
+
+      <h2>Getting your data out</h2>
+      <div class="grid2">
+        <div class="panel">
+          <h3>CSV</h3>
+          <p style="margin:0; font-size:13.5px; color: var(--muted)">
+            One row per day and category. Typed and timed minutes stay in
+            <strong>separate columns</strong>, so the distinction survives the export.
+          </p>
+        </div>
+        <div class="panel">
+          <h3>JSON</h3>
+          <p style="margin:0; font-size:13.5px; color: var(--muted)">
+            Everything: categories, target history, logs, sessions, tags.
+          </p>
+        </div>
+      </div>
+
+      <div class="note goodish">
+        <span class="tag">Backups happen on their own</span>
+        <p>
+          The database is copied into <code>backups/</code> every time the app starts
+          (skipped when nothing has changed), keeping the last ten. It's a small file,
+          and losing months of tracking to a stray command would be unrecoverable
+          otherwise.
+        </p>
+      </div>
+
+      <h2>A weekly export to a folder you choose</h2>
+      <p>
+        Under <em>Backups &amp; reminders</em>, set <strong>Weekly export folder</strong> to
+        a folder your cloud app already syncs — iCloud Drive or Google Drive. Once a
+        week the backend writes the full JSON export there, keeping the last 12 (you
+        can change that). <em>Export now</em> writes one immediately. Dayshift never
+        talks to the cloud itself; it only writes a file into a folder.
+      </p>
+      <figure class="shot">
+        <img src="img/u-settings-backup.png" alt="The Backups and reminders group: the weekly export folder, exports to keep 12, the evening reminder ticked at 9:30 pm, the latest export file with an Export now button, and the reminder install note" loading="lazy">
+        <figcaption>The export folder and the reminder only work where the backend runs — your own Mac, not a hosted copy.</figcaption>
+      </figure>
+
+      <h3>Setting it up with Google Drive</h3>
+      <ol class="steps">
+        <li>
+          <div>
+            <strong>Install Google Drive for desktop</strong> and sign in. It
+            puts your Drive in Finder, under <em>Google Drive → My Drive</em>.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Make a folder for the exports</strong> — in Finder or on
+            drive.google.com, e.g. <em>DayShift Tracker</em>. Wait until it shows up
+            under <em>My Drive</em> in Finder.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Copy the folder's path.</strong> In Finder, select the folder
+            and press <kbd class="k">⌥</kbd> <kbd class="k">⌘</kbd> <kbd class="k">C</kbd>.
+            It looks like
+            <code>/Users/you/Library/CloudStorage/GoogleDrive-you@gmail.com/My&nbsp;Drive/DayShift&nbsp;Tracker</code>.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Paste it into <em>Weekly export folder</em></strong> in
+            Settings → Backups &amp; reminders, and press <em>Save</em>. The app
+            checks the folder exists and can be written to before it accepts it.
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Press <em>Export now</em>.</strong> A file named
+            <code>dayshift-export-YYYY-MM-DD.json</code> appears in the folder, and
+            Drive uploads it. After that, one arrives every week on its own.
+          </div>
+        </li>
+      </ol>
+
+      <div class="note warnish">
+        <span class="tag">A drive.google.com link won't work</span>
+        <p>
+          The setting needs a folder on this Mac, not a web address. Dayshift makes
+          no network calls of its own — it writes a file, and Google Drive for
+          desktop does the uploading. iCloud Drive works the same way: use a folder
+          under <em>iCloud Drive</em> in Finder.
+        </p>
+      </div>
+      <ul>
+        <li>Exports are written only while the app is running, so the Mac needs to be on with Dayshift started some time that week.</li>
+        <li>Only the newest 12 exports are kept; older <code>dayshift-export-*.json</code> files in that folder are deleted. Nothing else in the folder is touched.</li>
+        <li>Each file is a full JSON export — everything Settings → Export gives you — so any one of them is a complete copy of your history.</li>
+      </ul>
+
+      <h2>An evening reminder</h2>
+      <p>
+        Tick <strong>Evening reminder</strong> and pick a time. At that time, a Mac
+        notification lists what's still open today — no check-in yet, habits not ticked,
+        revisions due, planned tasks left, tomorrow not planned. If nothing is open, it
+        stays quiet. It needs a one-time install from the project folder:
+      </p>
+      <div class="panel" style="padding: 12px 16px;">
+        <code style="background:none; border:none; padding:0; color: var(--cat1-b); font-size: 13px;">make reminder-install</code>
+      </div>
+      <p>
+        <code>make reminder-test</code> prints what it would say tonight without
+        notifying; <code>make reminder-uninstall</code> removes it.
+      </p>
+
+      <h2>Restoring a snapshot</h2>
+      <p>
+        Settings &rarr; Data lists the snapshots. <strong>Restore…</strong> asks you to
+        type <code>RESTORE</code>, then replaces everything with that snapshot. It can
+        be undone: your current data is snapshotted first, so it appears in the same
+        list afterwards. Your username and passcode are not affected.
+      </p>
+      <figure class="shot">
+        <img src="img/restore.png" alt="The Data panel with a snapshot list and a confirmation box asking to type RESTORE" loading="lazy">
+        <figcaption>The one destructive action in the app, so it asks twice.</figcaption>
+      </figure>
+
+      <h2>Restoring from an export file</h2>
+      <p>
+        Snapshots live on this Mac. If the Mac is gone, the weekly exports in your
+        Google Drive folder are the copy: on the new machine, Settings → Data →
+        <strong>Restore from an export file</strong>. Pick the newest
+        <code>dayshift-export-….json</code>; it's checked and summarised before
+        anything changes, then you type <code>RESTORE</code>.
+      </p>
+      <figure class="shot">
+        <img src="img/n-restore.png" alt="Restore from an export file: demo-export.json chosen, a summary of 6 categories, 12 sessions, 1 exam and more, a note that current data is snapshotted first, and the Type RESTORE box" loading="lazy">
+        <figcaption>It replaces everything — targets, logs, sessions, their history, settings — exactly as exported.</figcaption>
+      </figure>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Current data</dt><dd>snapshotted first — undo from the snapshot list</dd></div>
+          <div><dt>Username and passcode</dt><dd>untouched (never in an export)</dd></div>
+          <div><dt>Export folder and reminder</dt><dd>keep this Mac's settings</dd></div>
+          <div><dt>An export from before September 25</dt><dd>refused — export again first</dd></div>
+        </dl>
+      </div>
+
+      <h2>Changing your username or passcode</h2>
+      <p>
+        Settings &rarr; Credentials, confirmed with your current passcode. Changing the
+        passcode also signs out any other session — which is the point of changing it.
+      </p>
+    </section>
+
+    <!-- ---------- 10 ---------- -->
+    <section class="chapter" id="life" hidden style="--chapter: var(--cat5-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 10 <span class="progress">10 / 13</span></div>
+      <h1>Practice, check-ins &amp; exams</h1>
+      <p class="standfirst">
+        Three things that minutes alone can't tell you: which DSA topics you're weak
+        in, how sleep and energy shape your days, and what's coming up. None of them
+        changes how your minutes are scored — with one deliberate exception, exams.
+      </p>
+
+      <figure class="shot">
+        <img src="img/today-line.png" alt="The Today line: a Check in chip, 1 revision due, DBMS lab record in 2 days, OS midterm exam in 4 days, Maths quiz exam in 12 days" loading="lazy">
+        <figcaption>The Today line on the dashboard. Dashed <em>Check in</em> means today's isn't done yet; exams turn orange when they're three days out or less.</figcaption>
+      </figure>
+
+      <h2>Practice — the DSA problem log</h2>
+      <p>
+        At <code>/practice</code> (or press <kbd class="k">q</kbd>). Log each problem
+        you solve with its topic, difficulty and whether you needed a hint.
+        <strong>Logging a problem counts as one DSA question</strong> on the day you
+        solved it — the same count <code>+1 Q</code> adds to — so you never log the
+        same thing twice.
+      </p>
+      <figure class="shot">
+        <img src="img/practice.png" alt="The Practice page: 18 solved, a Revise today list with Solid, Shaky and Forgot buttons, the Log a problem form, a Topics list ordered weakest first, and every problem with its revision progress" loading="lazy">
+        <figcaption>Top: what to revise today and the form. Below: topics, weakest first, and every problem with its three revision dots.</figcaption>
+      </figure>
+
+      <h3>Revision: 3, 10 and 30 days</h3>
+      <p>
+        Every problem comes back <strong>3 days</strong> after you solved it, then
+        <strong>10</strong>, then <strong>30</strong>. Solve it again and say how it went:
+      </p>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt>Solid — solved it cleanly</dt><dd>next gap is longer</dd></div>
+          <div><dt>Shaky — got there, with a struggle</dt><dd>same gap again</dd></div>
+          <div><dt>Forgot — couldn't solve it</dt><dd>back to 3 days</dd></div>
+          <div><dt>Three solid revisions</dt><dd>mastered, stops coming back</dd></div>
+        </dl>
+      </div>
+      <p>
+        A revision <strong>never counts as a question</strong> — the 2-question target
+        is for new problems. The minutes you spend revising still count as DSA time.
+        The <em>Topics</em> list puts the topics where you most often needed a hint or
+        forgot on revision at the top: that's where your next problem should come from.
+      </p>
+
+      <h3>Fixing a problem you logged</h3>
+      <p>
+        Press <strong>edit</strong> on any problem to change its title, link, topic,
+        difficulty, hint or notes — or the day you solved it, which moves its DSA
+        question to that day. A revision you tapped by mistake can be removed there
+        too; the schedule goes back as if it never happened.
+      </p>
+      <figure class="shot">
+        <img src="img/p-edit.png" alt="The problem editor for Coin Change: title, link, topic dp, medium, the solved date changed to 18 September with the warning that its DSA question moves from 19 to 18 September, notes, and a revision from 22 September with Remove it and Keep" loading="lazy">
+        <figcaption>A problem can't be dated after its own first revision — remove that revision first if it was the mistake.</figcaption>
+      </figure>
+
+      <h3>A revision session</h3>
+      <p>
+        <strong>▶ Start revision session</strong> above the <em>Revise today</em> list
+        starts a DSA timer (tagged <code>revision</code>) and walks the due problems one
+        at a time: open it, solve it, mark it Solid, Shaky or Forgot, and the next one
+        comes up. Stop the timer when you're done and the minutes land as DSA time.
+      </p>
+      <figure class="shot">
+        <img src="img/u-revision.png" alt="A revision session in progress: problem 1 of 1 due today, with Solid, Shaky and Forgot buttons and the DSA timer running" loading="lazy">
+        <figcaption>One problem at a time, with the timer already running.</figcaption>
+      </figure>
+
+      <h2>Check-ins — sleep, energy, mood</h2>
+      <p>
+        Tap <em>Check in</em> on the Today line. Hours slept last night, energy and
+        mood on 1–5, and an optional note — every field optional, about ten seconds.
+      </p>
+      <figure class="shot">
+        <img src="img/checkin.png" alt="The check-in popover: hours and minutes slept, energy 1 to 5 from drained to sharp, mood 1 to 5 from low to great, an optional note, and Save check-in" loading="lazy">
+        <figcaption>The check-in. Context only — it never feeds a score.</figcaption>
+      </figure>
+      <p>
+        A day you don't check in stays a <strong>gap</strong>. It's never filled in,
+        carried forward or guessed. In Insights, the <em>Sleep &amp; energy</em> panel
+        lines check-ins up against how each day went:
+      </p>
+      <figure class="shot">
+        <img src="img/insights-sleep.png" alt="The Sleep and energy panel: bars of hours slept per day with dashed empty slots for missing check-ins, a coloured square per day for targets met, and averages grouped by sleep band and by morning energy" loading="lazy">
+        <figcaption>Bars are hours slept; dashed slots are gaps. Below, the same days grouped: here, nights under 6h were followed by days at 54% of target.</figcaption>
+      </figure>
+      <div class="note">
+        <span class="tag">How "how the day went" is measured</span>
+        <p>
+          The share of that day's targets met, with each category capped at 100% —
+          so four hours of one thing can't hide a skipped other. Averages over fewer
+          than five days are dimmed: too few to mean much.
+        </p>
+      </div>
+
+      <h2>Agenda — exams and deadlines</h2>
+      <p>
+        At <code>/agenda</code> (or <kbd class="k">a</kbd>). Add exams, assignments or
+        anything else with a date, and they appear on the Today line as they get close.
+        The page also holds your daily plan — Chapter 11.
+      </p>
+      <figure class="shot">
+        <img src="img/agenda.png" alt="The Agenda page: an assignment and two exams with countdowns, one with 2h 55m studied for it, the Add form with per-category targets for exam day, and Import a calendar" loading="lazy">
+        <figcaption>An exam shows the targets it sets. "Every target 0 that day" is the default.</figcaption>
+      </figure>
+      <div class="note warnish">
+        <span class="tag">An exam changes that day's targets automatically</span>
+        <p>
+          Adding an exam sets every category's target to <strong>0</strong> for that
+          day — change any of them in the form first, e.g. Coursework 60 on a study
+          day. They're ordinary overrides: the weekly chart marks the day
+          <code>*</code>, and an exam added <em>after</em> its day has passed shows up
+          in the honesty ledger, like any late override.
+        </p>
+        <p>
+          Move, rename or delete the exam and its overrides follow. If you've edited
+          that day's target by hand since, your edit wins and is left alone.
+        </p>
+      </div>
+
+      <h3>Hours studied for each exam</h3>
+      <p>
+        Pick an exam in the timer's <strong>For</strong> list (Chapter 04) and those
+        sessions count towards it. Each exam then shows how much you've put in so far,
+        and the monthly letter and year in review list the total per exam.
+      </p>
+      <figure class="shot">
+        <img src="img/u-agenda-studied.png" alt="The Coming up list: DBMS lab record in 2 days, OS midterm in 4 days with 2h 55m studied for it, and Maths quiz in 12 days with nothing studied yet" loading="lazy">
+        <figcaption>Only time from linked sessions counts — nothing is guessed from the category.</figcaption>
+      </figure>
+      <p>
+        Give an exam a <strong>study target</strong> in hours (in the add or edit form)
+        and it shows a bar and the daily pace to reach it: what's left, spread over
+        today up to the day before, rounded up to 5 minutes.
+      </p>
+      <figure class="shot">
+        <img src="img/n-pace.png" alt="OS midterm in 4 days: 2h 45m studied of 10h, a progress bar, and 1h 50m a day until the day before to reach it" loading="lazy">
+        <figcaption>Recalculated as you study — it goes down on good days and up on missed ones.</figcaption>
+      </figure>
+
+      <h3>Importing a calendar</h3>
+      <p>
+        Export your timetable or exam schedule as an <code>.ics</code> file (Google
+        Calendar, Outlook and most college portals can) and choose it under
+        <em>Import a calendar</em>. You get a list of the next year's events; nothing is
+        added until you tick them. Titles that look like exams — mid-sem, end-sem,
+        quiz, viva — start ticked as exams, and an imported exam sets its day's targets
+        just like a typed one.
+      </p>
+      <figure class="shot narrow">
+        <img src="img/ics-import.png" alt="The calendar import: five upcoming events with Computer Networks mid-sem and DBMS viva pre-ticked as exams" loading="lazy">
+        <figcaption>A guess you can change: the kind is a dropdown per event.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ---------- 11 ---------- -->
+    <section class="chapter" id="plans" hidden style="--chapter: var(--cat6-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 11 <span class="progress">11 / 13</span></div>
+      <h1>Plans, goals &amp; your month</h1>
+      <p class="standfirst">
+        Minutes say how long. This chapter is about the rest: what you meant to do,
+        what you actually produced, the small daily habits around the work, and how a
+        whole month looked. None of it changes a score.
+      </p>
+
+      <h2>The daily plan</h2>
+      <p>
+        On the Agenda page. The evening before, set <strong>minutes per category</strong>
+        and a short <strong>task list</strong> for tomorrow. On the day, each category
+        shows what you've actually done beside what you planned, and tasks tick off.
+        <em>Carry over</em> copies yesterday's unfinished tasks — copies, so yesterday
+        still honestly shows them as not done.
+      </p>
+      <figure class="shot">
+        <img src="img/plan.png" alt="The Plan panel for today: planned minutes per category with minutes done beside them, 95 of 180 planned minutes, a Suggest button, and three tasks, one ticked" loading="lazy">
+        <figcaption>It opens on today during the day and on tomorrow after 6 pm — when planning happens.</figcaption>
+      </figure>
+      <p>
+        <strong>Suggest</strong> fills the minutes in for you: what's left of each
+        category's week spread over the days left (rounded up to 5), an override's
+        number where there is one, 0 on rest days. It also names any exam in the next
+        three days. The suggestion only fills the form — change anything, then save.
+      </p>
+      <figure class="shot">
+        <img src="img/u-plan-suggest.png" alt="The Plan panel after Suggest: planned minutes per category with a reason under each, and a Coming up line naming the OS midterm" loading="lazy">
+        <figcaption>Every number says where it came from.</figcaption>
+      </figure>
+
+      <h2>Habits — yes or no, every day</h2>
+      <p>
+        At <code>/goals</code> (or <kbd class="k">g</kbd>). A habit is a daily yes/no —
+        <em>no phone the first hour</em>, <em>read 10 pages</em> — on the days you choose.
+      </p>
+      <div class="note warnish">
+        <span class="tag">An unticked day counts as not done</span>
+        <p>
+          Only today stays open until it's over. Forgot to tick yesterday even though
+          you did it? Click that day's square to fix it. A habit counts from the day you
+          add it — never backwards — so adding one never creates a history of misses.
+        </p>
+      </div>
+      <figure class="shot">
+        <img src="img/goals.png" alt="The Goals page: three habits with 14-day strips of green done squares and orange missed squares, streaks and 30-day rates, and milestones per category below" loading="lazy">
+        <figcaption>Green: done. Orange: not done. Dashed: today, still open. Blank: not scheduled.</figcaption>
+      </figure>
+      <p>Today's habits can also be ticked straight from the dashboard's Today line:</p>
+      <figure class="shot narrow">
+        <img src="img/habits-chip.png" alt="The Habits 0/2 chip open, with two checkboxes and a link to all habits" loading="lazy">
+      </figure>
+
+      <h2>Milestones — what the time produced</h2>
+      <p>
+        Also on Goals: a checklist per category — <em>auth done</em>, <em>deployed v1</em>.
+        Tick one and it's dated. The weekly review lists the week's finished milestones
+        under <em>What it produced</em>, and so does the monthly letter.
+      </p>
+
+      <h2>The monthly letter</h2>
+      <p>
+        From the <code>⋯</code> menu, the Review page, or <kbd class="k">m</kbd>. A month
+        written out: total time against the month before, the best week, each
+        category's share of target, milestones finished, problems solved and revised,
+        sleep and energy, habits and how much of your plans you kept.
+      </p>
+      <figure class="shot">
+        <img src="img/letter.png" alt="The September 2026 letter: 131h 21m worked, a table per category, four milestones and the OS midterm with 2h 55m studied, practice, sleep and energy, and habits" loading="lazy">
+        <figcaption>Written from your data each time it opens — nothing is stored, so it always agrees with your logs.</figcaption>
+      </figure>
+
+      <h2>The year in review</h2>
+      <p>
+        From the <code>⋯</code> menu, the letter's <em>Year</em> link, or the command
+        palette. The same idea for a whole year, built from the twelve letters so the
+        two always agree: a bar per month, each category's time, share of target and
+        days met, problems, sleep, habits, hours per exam and every milestone.
+      </p>
+      <figure class="shot">
+        <img src="img/u-year.png" alt="The 2026 year in review: 285h 32m tracked with August the biggest month, month bars, a category table, practice, sleep, habits, exams and milestones" loading="lazy">
+        <figcaption>Useful from the first month; it fills in as the year does.</figcaption>
+      </figure>
+
+      <h2>Git vs logged</h2>
+      <p>
+        In Settings, point a category at the git repositories you work in. Insights then
+        shows your own commits beside the minutes you logged, and flags two kinds of
+        mismatch: a day with an hour or more logged and no commits, or commits with
+        nothing logged.
+      </p>
+      <figure class="shot">
+        <img src="img/git.png" alt="Git vs logged for SDE Project: minutes above a line, commits below, amber bars on mismatched days, and a list of flagged days with Dismiss buttons" loading="lazy">
+        <figcaption>Read-only. A flag is a prompt to look, never a verdict — reading and debugging are real work that commit nothing. Dismiss any you've looked at.</figcaption>
+      </figure>
+      <div class="note">
+        <span class="tag">Only on your own machine</span>
+        <p>
+          Dayshift only ever runs <code>git log</code>, and only where the backend can see
+          the folders — so this works when the app runs locally, not on a hosted server.
+        </p>
+      </div>
+    </section>
+
+    <!-- ---------- 12 ---------- -->
+    <section class="chapter" id="shortcuts" hidden style="--chapter: var(--cat4-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 12 <span class="progress">12 / 13</span></div>
+      <h1>Shortcuts &amp; quick actions</h1>
+      <p class="standfirst">
+        The small things that make a tracker quick enough to actually keep using.
+        Press <kbd class="k">?</kbd> anywhere in the app to see every shortcut — or
+        open the <code>⋯</code> menu and choose <em>Keyboard shortcuts</em>.
+      </p>
+
+      <figure class="shot narrow">
+        <img src="img/shortcuts.png" alt="The keyboard shortcuts panel listing page, dashboard and log form shortcuts" loading="lazy">
+        <figcaption>The <code>?</code> panel. Shortcuts are single keys, and they switch off while you're typing in a field, so they never get in the way of a number — if <code>?</code> seems to do nothing, click an empty part of the page first.</figcaption>
+      </figure>
+
+      <h2>The command palette</h2>
+      <p>
+        <kbd class="k">⌘</kbd> / <kbd class="k">Ctrl</kbd> + <kbd class="k">K</kbd> from
+        anywhere. Type to jump to any page or start a timer — or log without touching
+        the mouse: <code>+25 sde</code>, <code>45 ai</code>, <code>+1q dsa</code>,
+        <code>30 ex</code>. Categories match by the start of a word or by initials
+        (<code>pm</code> is Project Maintenance).
+      </p>
+      <figure class="shot narrow">
+        <img src="img/palette.png" alt="The command palette with +25 sde typed and the top result Add 25 min to SDE Project today" loading="lazy">
+        <figcaption>Enter adds it. Like the dial buttons, it adds to today — it never overwrites.</figcaption>
+      </figure>
+
+      <h2>The ones worth learning first</h2>
+      <div class="panel">
+        <dl class="kv">
+          <div><dt><kbd class="k">[</kbd> <kbd class="k">]</kbd></dt><dd>previous / next domain</dd></div>
+          <div><dt><kbd class="k">l</kbd></dt><dd>jump to the Log tab</dd></div>
+          <div><dt><kbd class="k">t</kbd></dt><dd>jump to the Timer tab</dd></div>
+          <div><dt><kbd class="k">r</kbd> <kbd class="k">i</kbd> <kbd class="k">s</kbd> <kbd class="k">d</kbd></dt><dd>Review, Insights, Settings, Dashboard</dd></div>
+          <div><dt><kbd class="k">q</kbd> <kbd class="k">a</kbd> <kbd class="k">g</kbd> <kbd class="k">m</kbd></dt><dd>Practice, Agenda, Goals, monthly letter</dd></div>
+          <div><dt><kbd class="k">/</kbd></dt><dd>search notes and tags</dd></div>
+          <div><dt><kbd class="k">⌘/Ctrl</kbd> + <kbd class="k">Enter</kbd></dt><dd>record the log form</dd></div>
+        </dl>
+      </div>
+
+      <h2>Things that happen on their own</h2>
+      <ul>
+        <li><strong>Midnight.</strong> Leave the dashboard open overnight and it rolls over to the new day by itself — no stale "today".</li>
+        <li><strong>Coming back.</strong> Return to the browser tab and the numbers refresh.</li>
+        <li><strong>The backend drops.</strong> The page keeps what it last loaded and shows a <em>Retry</em> bar, rather than going blank.</li>
+        <li><strong>A timer you forgot.</strong> After three hours the timer asks whether you stepped away, and suggests Discard.</li>
+        <li><strong>A focus block ends.</strong> It records exactly its planned length, even if the page was closed.</li>
+        <li><strong>Once a week.</strong> If an export folder is set, a fresh JSON export lands in it.</li>
+        <li><strong>In the evening.</strong> If the reminder is installed and on, one notification about what's still open.</li>
+      </ul>
+
+      <h2>On a phone</h2>
+      <p>
+        Log on the phone, read on the laptop. On a phone the Today line starts with
+        <strong>＋ Quick entry</strong>: one column of big buttons — <code>+10 +15 +30
+        +60</code>, <code>+1 question</code>, the timer, today's habits and the
+        check-in — with an Undo for the last add.
+      </p>
+      <div class="shots2">
+        <figure class="shot phone">
+          <img src="img/quick.png" alt="Quick entry on a phone: DSA, Exercise and Coursework with progress bars and large add buttons, habits and a check-in below" loading="lazy">
+          <figcaption>Quick entry, at <code>/quick</code>.</figcaption>
+        </figure>
+        <figure class="shot phone">
+          <img src="img/phone-daily.png" alt="The dashboard at phone width: header, the Today chips, the Daily domain, this week, and the DSA dial" loading="lazy">
+          <figcaption>The full dashboard stacks at phone width; swipe the dials to change domain.</figcaption>
+        </figure>
+      </div>
+
+      <h3>Opening it on your phone</h3>
+      <p>
+        Dayshift runs on your Mac, so the phone opens the Mac's address. Start it with
+        this instead of plain <code>dayshift</code>:
+      </p>
+      <div class="panel" style="padding: 12px 16px;">
+        <code style="background:none; border:none; padding:0; color: var(--cat1-b); font-size: 13px;">dayshift share</code>
+      </div>
+      <p>
+        It prints the address (like <code>http://192.168.1.20:5173</code>) and a QR code
+        in the terminal: point the phone's camera at it, sign in as usual, and — on an
+        iPhone — Share → <em>Add to Home Screen</em> for an icon. Plain
+        <code>dayshift</code> stays private to the Mac; sharing is something you turn on.
+      </p>
+      <ul>
+        <li><strong>Same Wi-Fi only</strong>, and only while the Mac is on and awake with Dayshift running.</li>
+        <li>The first time, macOS may ask whether <em>node</em> may accept incoming connections — allow it, or the phone can't connect.</li>
+        <li>Only the app's page is shared. The server holding your data stays private to the Mac, and nothing can be read without signing in.</li>
+        <li>Use it on networks you trust. On college or café Wi-Fi, anyone there can reach the sign-in page.</li>
+      </ul>
+
+      <h3>From anywhere: Tailscale</h3>
+      <p>
+        Tailscale is a free private network between your own devices. Install it on the
+        Mac and the phone and sign both into the same account; the phone can then reach
+        the Mac from anywhere, without Dayshift ever being on the public internet. Run
+        <code>dayshift share</code> again and it lists a Tailscale address too;
+        <code>dayshift share tailscale</code> shows the QR code for that one. The Mac
+        still has to be on at home.
+      </p>
+    </section>
+
+    <!-- ---------- 13 ---------- -->
+    <section class="chapter" id="trouble" hidden style="--chapter: var(--cat1-b)">
+      <div class="eyebrow"><span class="pip"></span> Chapter 13 <span class="progress">13 / 13</span></div>
+      <h1>When something breaks</h1>
+      <p class="standfirst">
+        The short list of things that actually go wrong, and what each one means.
+      </p>
+
+      <h2>Par shows a dash</h2>
+      <p>
+        Expected in two cases: you're before your tracking start date, or the window
+        holds no scheduled days for that category yet. It means "no score yet", which is
+        honest — showing 0% would imply you failed at something that hasn't started.
+      </p>
+
+      <h2>"Port 8000 is already in use"</h2>
+      <p>A previous run didn't shut down. Stop it and start again:</p>
+      <div class="panel" style="padding: 12px 16px;">
+        <code style="background:none; border:none; padding:0; color: var(--cat1-b); font-size: 13px;">pkill -f "uvicorn app:app"</code>
+      </div>
+
+      <h2>The phone can't open it</h2>
+      <p>Work down the list; the first one is almost always it.</p>
+      <ul>
+        <li><strong>Started with <code>dayshift share</code>?</strong> Plain <code>dayshift</code> only answers the Mac. <code>dayshift status</code> says <em>shared</em> or <em>this Mac only</em>.</li>
+        <li><strong>Same Wi-Fi?</strong> A phone on mobile data, or on a different network, can't reach the Wi-Fi address.</li>
+        <li><strong>A college, office or café network?</strong> Those usually stop devices reaching each other (<em>client isolation</em>) — the Mac is fine, but nothing gets through. Use the Tailscale address instead: <code>dayshift share tailscale</code>.</li>
+        <li><strong>Tailscale on the phone switched on?</strong> The toggle at the top of its app; iOS shows a VPN badge while it's active. Tailscale started after <code>dayshift share</code>? Run it again to see the new address.</li>
+        <li><strong>A macOS prompt about <em>node</em> accepting incoming connections?</strong> Allow it (System Settings → Network → Firewall → Options if you dismissed it).</li>
+      </ul>
+
+      <h2>The backend won't start</h2>
+      <p>
+        Read <code>backend.log</code> in the project folder. Configuration problems fail
+        immediately with a message naming the setting, rather than surfacing later as a
+        mysterious error.
+      </p>
+
+      <h2>You've forgotten your passcode</h2>
+      <p>
+        Delete <code>auth.json</code>. The app returns to the first-run setup screen and
+        you choose new credentials. <strong>Your tracked data is untouched</strong> — it
+        lives in <code>dayshift.db</code>, which is a different file.
+      </p>
+
+      <h2>You want to start over completely</h2>
+      <div class="panel" style="padding: 12px 16px;">
+        <code style="background:none; border:none; padding:0; color: var(--cat1-b); font-size: 13px;">make reset-db</code>
+      </div>
+      <p>
+        Deletes the database; it's recreated and reseeded on the next start. There's a
+        copy in <code>backups/</code> if you change your mind.
+      </p>
+
+      <h2>Everything at once</h2>
+      <p>
+        <code>make</code> on its own lists every command. <code>make check</code> runs
+        the full test suite plus linting — worth doing after you change anything.
+      </p>
+
+      <div class="note">
+        <span class="tag">One honest limitation</span>
+        <p>
+          Nothing in Dayshift can stop you lying to it. Every safeguard here is about
+          making the truth <em>visible</em>, never about enforcement — there's no edit
+          lock, no approval step, no time window after which a day freezes.
+        </p>
+        <p>
+          That's deliberate. A tracker that fights you is a tracker you stop opening,
+          and the logs are only worth anything if they're true.
+        </p>
+      </div>
+    </section>
+
+    <!-- Pager is populated by script -->
+    <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+  </main>
+</div>
+
+<script>
+  (function () {
+    var order = ['what','firstrun','dashboard','logging','targets','scores','review','insights','settings','life','plans','shortcuts','trouble'];
+    var titles = {
+      what: 'What Dayshift is',
+      firstrun: 'Your first run',
+      dashboard: 'Reading the dashboard',
+      logging: 'Logging your time',
+      targets: 'Targets & overrides',
+      scores: 'How scoring works',
+      review: 'The weekly review',
+      insights: 'Insights over time',
+      settings: 'Settings & your data',
+      life: 'Practice, check-ins & exams',
+      plans: 'Plans, goals & your month',
+      shortcuts: 'Shortcuts & quick actions',
+      trouble: 'When something breaks'
+    };
+
+    var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+    var pager = document.getElementById('pager');
+
+    function currentFromHash() {
+      var id = (location.hash || '').replace('#', '');
+      return order.indexOf(id) > -1 ? id : order[0];
+    }
+
+    function buildPager(idx) {
+      pager.textContent = '';
+      var prev = order[idx - 1];
+      var next = order[idx + 1];
+
+      if (prev) {
+        var a = document.createElement('a');
+        a.href = '#' + prev;
+        a.className = 'prev';
+        a.innerHTML = '<span class="dir">Previous</span><span class="ttl"></span>';
+        a.querySelector('.ttl').textContent = titles[prev];
+        pager.appendChild(a);
+      }
+      if (!prev) {
+        var sp = document.createElement('span');
+        sp.className = 'spacer';
+        pager.appendChild(sp);
+      }
+      if (next) {
+        var b = document.createElement('a');
+        b.href = '#' + next;
+        b.className = 'next';
+        b.innerHTML = '<span class="dir">Next</span><span class="ttl"></span>';
+        b.querySelector('.ttl').textContent = titles[next];
+        pager.appendChild(b);
+      }
+    }
+
+    function show(id, scroll) {
+      var idx = order.indexOf(id);
+      if (idx < 0) { idx = 0; id = order[0]; }
+
+      order.forEach(function (key) {
+        var el = document.getElementById(key);
+        if (el) el.hidden = (key !== id);
+      });
+
+      links.forEach(function (link) {
+        if (link.getAttribute('data-ch') === id) {
+          link.setAttribute('aria-current', 'page');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+
+      buildPager(idx);
+
+      if (scroll) {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        var main = document.getElementById('main');
+        if (main) main.focus({ preventScroll: true });
+      }
+    }
+
+    window.addEventListener('hashchange', function () {
+      show(currentFromHash(), true);
+    });
+
+    // Navigate on click rather than relying on the hash alone. Deep links and
+    // the back button still work through the hashchange handler above, but the
+    // page also pages correctly where the hash is unavailable — opened from a
+    // data: URL, or embedded in a viewer that snapshots it.
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+      if (!link) return;
+      var id = link.getAttribute('href').slice(1);
+      if (order.indexOf(id) < 0) return;
+      e.preventDefault();
+      show(id, true);
+      try {
+        if (location.protocol !== 'data:') {
+          history.pushState(null, '', '#' + id);
+        }
+      } catch (err) {
+        /* Hash unavailable here; the chapter already switched. */
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      var tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || e.metaKey || e.ctrlKey || e.altKey) return;
+      var idx = order.indexOf(currentFromHash());
+      if (e.key === 'ArrowRight' && idx < order.length - 1) {
+        location.hash = '#' + order[idx + 1];
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        location.hash = '#' + order[idx - 1];
+      }
+    });
+
+    show(currentFromHash(), false);
+  })();
+</script>
+
+</body>
+</html>

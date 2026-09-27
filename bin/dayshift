@@ -1,0 +1,142 @@
+#!/bin/bash
+#
+# DAYSHIFT — one command, from any folder.
+#
+#   dayshift            open it if it's running; otherwise start it, then open it
+#   dayshift share      start it reachable from your phone; show the address + QR
+#   dayshift share tailscale   the same, with the QR for away-from-home
+#   dayshift open       open it in the browser (assumes it is running)
+#   dayshift status     is it running, and where
+#   dayshift stop       stop this app's backend and frontend
+#   dayshift help       this text
+#
+# Starting runs ./start.sh in this terminal, as usual: Ctrl-C stops it.
+# Plain `dayshift` is this Mac only; `share` lasts until it is stopped.
+# Installed as a link on your PATH:  make install-command
+#
+set -euo pipefail
+
+# Resolve the app folder through the PATH symlink.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+APPDIR="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
+
+BACKEND_PORT=8000
+FRONTEND_PORT=5173
+URL="http://localhost:$FRONTEND_PORT"
+
+say() { printf '%s\n' "$*"; }
+
+up() { curl -sf -o /dev/null --max-time 2 "$1"; }
+backend_up()  { up "http://127.0.0.1:$BACKEND_PORT/api/health"; }
+frontend_up() { up "$URL"; }
+
+open_browser() {
+  # DAYSHIFT_NO_BROWSER=1 skips it (scripts, tests).
+  if [ -z "${DAYSHIFT_NO_BROWSER:-}" ]; then open "$URL"; fi
+  say "Dayshift → $URL"
+}
+
+# PIDs listening on a port whose working folder is inside this app — so
+# `stop` never touches another program that happens to use the same port.
+our_pids() {
+  local port="$1" pid cwd
+  for pid in $(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null); do
+    cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')"
+    case "$cwd" in "$APPDIR"|"$APPDIR"/*) echo "$pid" ;; esac
+  done
+}
+
+# True when the frontend listens on the network, not just this Mac.
+is_shared() {
+  lsof -nP -iTCP:"$FRONTEND_PORT" -sTCP:LISTEN 2>/dev/null | grep -q "\*:$FRONTEND_PORT"
+}
+
+stop_ours() {
+  local pids
+  pids="$(our_pids "$BACKEND_PORT") $(our_pids "$FRONTEND_PORT")"
+  pids="$(echo $pids)"
+  [ -z "$pids" ] && return 1
+  kill $pids 2>/dev/null || true
+  return 0
+}
+
+case "${1:-}" in
+  "")
+    if backend_up && frontend_up; then
+      say "Already running."
+      open_browser
+      exit 0
+    fi
+    if backend_up || frontend_up; then
+      say "Half running (backend or frontend only). Run: dayshift stop, then dayshift"
+      exit 1
+    fi
+    # Open the browser once the frontend answers, while start.sh runs here.
+    (
+      for _ in $(seq 1 180); do
+        if frontend_up && backend_up; then open_browser; exit 0; fi
+        sleep 1
+      done
+    ) &
+    cd "$APPDIR"
+    exec ./start.sh
+    ;;
+  share)
+    qr_for="${2:-}"
+    if backend_up && frontend_up && is_shared; then
+      node "$APPDIR/scripts/share.mjs" $qr_for
+      exit 0
+    fi
+    if backend_up || frontend_up; then
+      say "Running for this Mac only — restarting it shared…"
+      stop_ours || true
+      for _ in $(seq 1 20); do
+        backend_up || frontend_up || break
+        sleep 0.5
+      done
+    fi
+    # Show the phone addresses once it's up, while start.sh runs here.
+    (
+      for _ in $(seq 1 180); do
+        if frontend_up && backend_up; then
+          node "$APPDIR/scripts/share.mjs" $qr_for
+          exit 0
+        fi
+        sleep 1
+      done
+    ) &
+    cd "$APPDIR"
+    DAYSHIFT_SHARE=1 exec ./start.sh
+    ;;
+  open)
+    if frontend_up; then open_browser; else say "Not running — start it with: dayshift"; exit 1; fi
+    ;;
+  status)
+    say "App folder: $APPDIR"
+    if backend_up; then say "Backend:  running on :$BACKEND_PORT"; else say "Backend:  stopped"; fi
+    if frontend_up; then
+      if is_shared; then
+        say "Frontend: running → $URL, shared on your network (dayshift share for the address)"
+      else
+        say "Frontend: running → $URL, this Mac only"
+      fi
+    else
+      say "Frontend: stopped"
+    fi
+    ;;
+  stop)
+    if stop_ours; then say "Stopped."; else say "Nothing of Dayshift's is running."; fi
+    ;;
+  help|-h|--help)
+    sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'
+    ;;
+  *)
+    say "Unknown command: $1 (try: dayshift help)"
+    exit 2
+    ;;
+esac
