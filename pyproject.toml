@@ -1,0 +1,43 @@
+# Tooling config for the Python side. Packaging is deliberately absent —
+# Dayshift is run, not installed.
+
+[tool.ruff]
+target-version = "py311"
+line-length = 90
+src = ["backend", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import sorting
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "SIM",      # simplify
+    "C4",       # comprehensions
+    "RUF",      # ruff-specific
+    "ANN",      # missing type annotations (every signature is typed)
+    "D",        # docstrings
+]
+ignore = [
+    "D100",     # module docstring — not every module needs a banner
+    "D104",     # package docstring
+    "D107",     # __init__ docstring
+    "D203",     # conflicts with D211
+    "D213",     # conflicts with D212
+    "ANN401",   # allow Any where it is genuinely the type
+    # FastAPI's whole dependency-injection idiom is `Depends()`/`Query()` in
+    # argument defaults. B008 exists for mutable defaults; here it is a false
+    # positive against the framework's documented usage.
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests document themselves through their names; fixtures return fixture types.
+"tests/*" = ["D101", "D102", "D103", "ANN001", "ANN201"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.format]
+quote-style = "double"

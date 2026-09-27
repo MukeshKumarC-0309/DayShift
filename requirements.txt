@@ -1,0 +1,10 @@
+# Pinned to releases that ship prebuilt wheels for Python 3.11 through 3.14,
+# so ./start.sh never has to compile pydantic-core from Rust source.
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+sqlalchemy==2.0.54
+alembic==1.20.0
+pydantic==2.13.5
+python-dotenv==1.2.3
+argon2-cffi==25.1.0
+pyjwt==2.14.0

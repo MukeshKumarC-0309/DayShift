@@ -1,0 +1,16 @@
+# Netlify hosts the React frontend only. The FastAPI backend runs elsewhere
+# (see the Dockerfile and README § Deploying) because Netlify cannot run a
+# long-lived Python server or keep a SQLite file between requests.
+#
+# /api/* is proxied to the backend so the browser sees one origin — that keeps
+# the httpOnly session cookie first-party. The proxy rule is generated at build
+# time from the BACKEND_URL environment variable (set it in the Netlify UI:
+# Site configuration -> Environment variables), by scripts/netlify-redirects.mjs.
+
+[build]
+  base = "frontend"
+  command = "npm run build && node scripts/netlify-redirects.mjs"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"

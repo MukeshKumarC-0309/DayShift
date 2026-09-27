@@ -1,0 +1,8 @@
+# Keep each script's line endings right on both Mac and Windows checkouts.
+* text=auto
+*.sh text eol=lf
+bin/dayshift text eol=lf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.db binary

@@ -1,0 +1,45 @@
+# Secrets and data
+.env
+auth.json
+auth.json.tmp
+# A restore's temporary rebuild (deleted afterwards; ignored if one is interrupted)
+restore-*.db
+dayshift.db
+dayshift.db-journal
+dayshift.db-wal
+dayshift.db-shm
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+frontend/dist/
+.vite/
+
+# Runtime
+backups/
+*.log
+.backend.pid
+
+# macOS
+.DS_Store
+
+# Build artifacts
+tsconfig.tsbuildinfo
+backend.log
+reminder.log
+.reminder-sent
+
+# Test output
+frontend/test-results/
+frontend/playwright-report/
+frontend/.openapi.json
+frontend/.schema.check.d.ts

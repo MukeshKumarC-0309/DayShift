@@ -1,0 +1,6 @@
+# Development-only dependencies. Runtime deps live in requirements.txt.
+-r requirements.txt
+
+pytest==8.3.4
+httpx2==2.13.1       # required by starlette's TestClient (successor to httpx)
+ruff==0.14.5
