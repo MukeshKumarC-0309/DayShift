@@ -761,8 +761,9 @@ make test                          # all
 | CI | GitHub Actions | `.github/workflows/ci.yml` |
 
 CI runs the backend suite against Python 3.11 and 3.13, lints, type-checks,
-tests and builds the frontend, and checks the API types and runs the end-to-end
-test in Chrome.
+tests and builds the frontend, checks the API types and runs the end-to-end
+test in Chrome — and on Windows, runs the backend suite and starts the app
+with `start.cmd` from scratch, then stops it with `dayshift stop`.
 
 Architecture notes, and the reasoning behind the deliberate omissions, are in
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).

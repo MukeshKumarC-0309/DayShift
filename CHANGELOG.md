@@ -5,6 +5,19 @@ personal single-user tool, so versions are milestones rather than releases.
 
 [kac]: https://keepachangelog.com/en/1.1.0/
 
+## [1.18.1] — 2026-09-27
+
+### Added
+
+- CI on Windows: the backend suite, plus a first-run `start.cmd` that must
+  bring the app up, and `dayshift status`/`stop` that must shut it down.
+
+### Changed
+
+- Tests are portable to Windows: the credentials-permission test skips there
+  (Windows uses the profile's access control, not Unix mode bits), and the
+  git tests use the platform's null device.
+
 ## [1.18.0] — 2026-09-27
 
 ### Added

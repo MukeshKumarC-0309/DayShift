@@ -407,8 +407,8 @@ def make_repo(root: Path, commit_days: list[str]) -> Path:
     repo.mkdir()
     env = {
         **os.environ,
-        "GIT_CONFIG_GLOBAL": "/dev/null",
-        "GIT_CONFIG_SYSTEM": "/dev/null",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_SYSTEM": os.devnull,
     }
 
     def git(*args: str, extra: dict[str, str] | None = None) -> None:
@@ -523,8 +523,8 @@ def make_branch_repo(root: Path) -> Path:
     repo.mkdir()
     env = {
         **os.environ,
-        "GIT_CONFIG_GLOBAL": "/dev/null",
-        "GIT_CONFIG_SYSTEM": "/dev/null",
+        "GIT_CONFIG_GLOBAL": os.devnull,
+        "GIT_CONFIG_SYSTEM": os.devnull,
     }
 
     def git(*args: str, when: str | None = None) -> None:

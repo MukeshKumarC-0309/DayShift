@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from datetime import date, timedelta
 
 import pytest
@@ -93,6 +94,10 @@ class TestSetup:
         assert TEST_PASSCODE not in stored
         assert "$argon2" in stored
 
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="Unix permission bits; on Windows the user profile's ACLs apply",
+    )
     def test_credentials_file_is_owner_only(
         self, configured_client: TestClient, tmp_path
     ) -> None:
