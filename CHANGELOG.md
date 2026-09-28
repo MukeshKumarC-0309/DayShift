@@ -5,6 +5,21 @@ personal single-user tool, so versions are milestones rather than releases.
 
 [kac]: https://keepachangelog.com/en/1.1.0/
 
+## [1.18.2] — 2026-09-28
+
+### Fixed
+
+- **Restoring from an export failed on Windows** ("file is being used by
+  another process"). sqlite3's `with` block commits but doesn't close, so
+  the temporary rebuild was still open when it was deleted — fine on macOS,
+  refused by Windows. Every such connection (export restore, snapshot
+  restore, the benchmark) now closes explicitly. Found by the new Windows CI.
+
+### Changed
+
+- CI uses the current releases of GitHub's checkout and setup steps
+  (the old ones targeted a deprecated Node version).
+
 ## [1.18.1] — 2026-09-27
 
 ### Added

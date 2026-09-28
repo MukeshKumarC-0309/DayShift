@@ -88,6 +88,7 @@ def _run(tmp: Path) -> None:
                     sessions += 1
             day += timedelta(days=1)
         db.commit()
+        db.close()  # an open file can't be deleted on Windows
         print(f"{(today - start).days} days, {sessions} sessions\n")
 
         urls = [

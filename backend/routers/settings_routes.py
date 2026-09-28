@@ -8,6 +8,7 @@ import json
 import logging
 import re
 import sqlite3
+from contextlib import closing
 from datetime import date
 from typing import Any
 
@@ -225,7 +226,8 @@ def restore_backup(name: str) -> dict[str, str]:
             status_code=status.HTTP_404_NOT_FOUND, detail="No such backup"
         )
     try:
-        with sqlite3.connect(f"file:{source}?mode=ro", uri=True) as check:
+        # `closing`: sqlite3's own `with` leaves the file open (see importer).
+        with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as check:
             check.execute("SELECT version_num FROM alembic_version").fetchone()
             check.execute("SELECT count(*) FROM daily_logs").fetchone()
     except sqlite3.Error as exc:
@@ -240,8 +242,8 @@ def restore_backup(name: str) -> dict[str, str]:
 
     database.engine.dispose()
     with (
-        sqlite3.connect(f"file:{source}?mode=ro", uri=True) as src,
-        sqlite3.connect(config.DATABASE_PATH) as dest,
+        closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as src,
+        closing(sqlite3.connect(config.DATABASE_PATH)) as dest,
     ):
         src.backup(dest)
     database.engine.dispose()

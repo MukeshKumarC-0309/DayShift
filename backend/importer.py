@@ -17,6 +17,7 @@ import logging
 import os
 import sqlite3
 import tempfile
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -127,7 +128,9 @@ def _build(tables: dict[str, list[dict[str, Any]]], path: Path) -> None:
 def _keep_machine_settings(connection: Any) -> None:
     """Carry this machine's export folder and reminder over into the new copy."""
     placeholders = ",".join("?" for _ in MACHINE_SETTINGS)
-    with sqlite3.connect(config.DATABASE_PATH) as live:
+    # `closing`: sqlite3's own `with` only commits and leaves the file open,
+    # which Windows then refuses to replace or delete.
+    with closing(sqlite3.connect(config.DATABASE_PATH)) as live:
         current = live.execute(
             f"SELECT key, value, updated_at FROM settings WHERE key IN ({placeholders})",
             MACHINE_SETTINGS,
@@ -166,8 +169,8 @@ def restore(data: Any) -> dict[str, Any]:
         database.snapshot_database()
         database.engine.dispose()
         with (
-            sqlite3.connect(f"file:{path}?mode=ro", uri=True) as source,
-            sqlite3.connect(config.DATABASE_PATH) as dest,
+            closing(sqlite3.connect(f"file:{path}?mode=ro", uri=True)) as source,
+            closing(sqlite3.connect(config.DATABASE_PATH)) as dest,
         ):
             source.backup(dest)
         database.engine.dispose()
