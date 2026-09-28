@@ -1,4 +1,4 @@
-# DAYSHIFT for Windows — the counterpart of bin/dayshift. Run it as `dayshift`
+# DAYSHIFT for Windows - the counterpart of bin/dayshift. Run it as `dayshift`
 # (bin\dayshift.cmd) once the bin folder is on your PATH:
 #   powershell -ExecutionPolicy Bypass -File scripts\install-command.ps1
 #
@@ -11,6 +11,8 @@
 #   dayshift help       this text
 
 param([string]$Command = '', [string]$Option = '')
+
+# Keep this file ASCII-only (see scripts/start.ps1).
 
 $AppDir = Split-Path -Parent $PSScriptRoot
 $BackendPort = 8000

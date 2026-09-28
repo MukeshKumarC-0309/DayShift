@@ -159,7 +159,8 @@ jobs:
             catch { $false }
           }
           $up = $false
-          foreach ($i in 1..150) {
+          $deadline = (Get-Date).AddMinutes(6)
+          while ((Get-Date) -lt $deadline) {
             if ((Test-Ok 'http://localhost:5173/') -and (Test-Ok 'http://localhost:5173/api/health')) {
               $up = $true; break
             }
@@ -169,7 +170,7 @@ jobs:
           if (-not $up) {
             Write-Host '--- stderr'; Get-Content $err -ErrorAction SilentlyContinue
             Write-Host '--- backend.err.log'; Get-Content backend.err.log -ErrorAction SilentlyContinue
-            throw 'Dayshift did not come up from start.cmd within 5 minutes.'
+            throw 'Dayshift did not come up from start.cmd within 6 minutes.'
           }
           Write-Host "API: $((Invoke-WebRequest -UseBasicParsing http://localhost:5173/api/health).Content)"
 

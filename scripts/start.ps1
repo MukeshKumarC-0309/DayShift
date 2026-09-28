@@ -1,4 +1,4 @@
-# Single-command launcher for Windows — the counterpart of ./start.sh.
+# Single-command launcher for Windows - the counterpart of ./start.sh.
 #
 #   start.cmd              (from Command Prompt, or double-click it)
 #
@@ -7,7 +7,13 @@
 # both. Set DAYSHIFT_SHARE=1 (or run `dayshift share`) to reach it from your
 # phone; the backend always stays on 127.0.0.1.
 
-$ErrorActionPreference = 'Stop'
+# Not 'Stop': in Windows PowerShell 5.1 a native program's stderr line (pip's
+# upgrade notice, npm warnings) counts as an error when output is redirected,
+# and 'Stop' would end the script on it. Each step checks $LASTEXITCODE or its
+# own result instead.
+$ErrorActionPreference = 'Continue'
+# Keep this file ASCII-only: Windows PowerShell 5.1 reads BOM-less scripts as
+# Windows-1252, where some UTF-8 bytes turn into quote characters.
 
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
@@ -43,7 +49,7 @@ if (-not $PyExe -and (Get-Command python -ErrorAction SilentlyContinue)) {
 if (-not $PyExe) { Fail 'No Python 3.11+ found (https://www.python.org/downloads/).' }
 
 # .env is optional: credentials are set up in the app on first run.
-if (-not (Test-Path (Join-Path $Root '.env'))) { Say 'no .env found — using defaults (this is fine)' }
+if (-not (Test-Path (Join-Path $Root '.env'))) { Say 'no .env found - using defaults (this is fine)' }
 
 # --- Backend deps ------------------------------------------------------------
 
@@ -79,7 +85,7 @@ if (-not (Test-Path (Join-Path $Root 'frontend\node_modules'))) {
 # --- Port check --------------------------------------------------------------
 
 if (Get-NetTCPConnection -LocalPort $BackendPort -State Listen -ErrorAction SilentlyContinue) {
-  Fail "Port $BackendPort is already in use — another copy may still be running (dayshift stop)."
+  Fail "Port $BackendPort is already in use - another copy may still be running (dayshift stop)."
 }
 
 # --- Launch ------------------------------------------------------------------
@@ -113,9 +119,9 @@ try {
   if (-not $up) { Fail "Backend did not come up in 30s. See $BackendErrLog" }
 
   Say 'backend up  (logs: backend.log, backend.err.log)'
-  Say "frontend starting — open http://localhost:$FrontendPort"
+  Say "frontend starting - open http://localhost:$FrontendPort"
   if ($env:DAYSHIFT_SHARE -eq '1') {
-    Say 'shared on your network — phone addresses:'
+    Say 'shared on your network - phone addresses:'
     & node (Join-Path $Root 'scripts\share.mjs') $env:DAYSHIFT_QR
   }
   Write-Host ''

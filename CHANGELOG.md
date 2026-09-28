@@ -15,10 +15,21 @@ personal single-user tool, so versions are milestones rather than releases.
   refused by Windows. Every such connection (export restore, snapshot
   restore, the benchmark) now closes explicitly. Found by the new Windows CI.
 
+- **`start.ps1` could not run on Windows at all.** Windows PowerShell 5.1
+  reads a script without a byte-order mark as Windows-1252, where the last
+  byte of a UTF-8 em dash becomes a curly quote that PowerShell accepts as a
+  real one — ending double-quoted strings early, so the script never parsed.
+  The Windows scripts are now ASCII-only, and a test keeps them that way.
+- `start.ps1` no longer stops on harmless stderr output (pip's upgrade notice,
+  npm warnings), which PowerShell 5.1 treats as errors when redirected; every
+  step checks its own result instead.
+
 ### Changed
 
 - CI uses the current releases of GitHub's checkout and setup steps
   (the old ones targeted a deprecated Node version).
+- The Windows CI check gives the app a real 6-minute limit to come up (its
+  retry loop could previously wait about 20).
 
 ## [1.18.1] — 2026-09-27
 
