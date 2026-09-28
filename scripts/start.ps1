@@ -55,6 +55,12 @@ if (-not (Test-Path (Join-Path $Root '.env'))) { Say 'no .env found - using defa
 
 $VenvPython = Join-Path $Venv 'Scripts\python.exe'
 if (-not (Test-Path $VenvPython)) {
+  # A half-restored .venv (no python.exe) is rebuilt from scratch, so its old
+  # install stamp can't make the next step skip installing the packages.
+  if (Test-Path $Venv) {
+    Say 'the virtualenv (.venv) is broken - rebuilding it'
+    Remove-Item -Recurse -Force $Venv
+  }
   Say "creating virtualenv (.venv) with $PyExe $($PyArgs -join ' ')"
   & $PyExe @PyArgs -m venv $Venv
   if ($LASTEXITCODE -ne 0) { Fail 'Could not create the virtualenv.' }
@@ -73,7 +79,8 @@ if (-not (Test-Path $Stamp) -or (Get-Item $Requirements).LastWriteTime -gt (Get-
 
 # --- Frontend deps -----------------------------------------------------------
 
-if (-not (Test-Path (Join-Path $Root 'frontend\node_modules'))) {
+# Vite itself, not just the folder: node_modules can be left half there.
+if (-not (Test-Path (Join-Path $Root 'frontend\node_modules\.bin\vite.cmd'))) {
   Say 'installing frontend dependencies (first run, this takes a minute)'
   Push-Location (Join-Path $Root 'frontend')
   & npm install --no-fund --no-audit

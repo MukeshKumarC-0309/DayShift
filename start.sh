@@ -43,7 +43,11 @@ fi
 
 # --- Backend deps ------------------------------------------------------------
 
-if [ ! -d "$VENV" ]; then
+# Check for the interpreter, not just the folder: a half-restored or moved
+# .venv can exist without a working Python in it.
+if [ ! -x "$VENV/bin/python" ] || ! "$VENV/bin/python" -c 'import sys' >/dev/null 2>&1; then
+  [ -d "$VENV" ] && say "the virtualenv (.venv) is broken — rebuilding it"
+  rm -rf "$VENV"
   say "creating virtualenv (.venv) with $PY"
   "$PY" -m venv "$VENV"
 fi
@@ -59,7 +63,8 @@ fi
 
 # --- Frontend deps -----------------------------------------------------------
 
-if [ ! -d "$ROOT/frontend/node_modules" ]; then
+# Vite itself, not just the folder: node_modules can be left half there.
+if [ ! -x "$ROOT/frontend/node_modules/.bin/vite" ]; then
   say "installing frontend dependencies (first run, this takes a minute)"
   (cd "$ROOT/frontend" && npm install --no-fund --no-audit)
 fi

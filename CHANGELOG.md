@@ -5,6 +5,17 @@ personal single-user tool, so versions are milestones rather than releases.
 
 [kac]: https://keepachangelog.com/en/1.1.0/
 
+## [1.18.4] — 2026-09-28
+
+### Fixed
+
+- **A half-restored folder couldn't start.** After the project folder was
+  restored from the Trash, `.venv` existed but had no working Python, and
+  `node_modules` was incomplete. `start.sh` only checked that those folders
+  existed, so it would have failed. Both start scripts now check for the
+  Python interpreter and for Vite itself, and rebuild whatever is broken
+  (a broken `.venv` from scratch, so its install stamp can't skip packages).
+
 ## [1.18.3] — 2026-09-28
 
 ### Changed
