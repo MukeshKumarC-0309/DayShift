@@ -5,6 +5,14 @@ personal single-user tool, so versions are milestones rather than releases.
 
 [kac]: https://keepachangelog.com/en/1.1.0/
 
+## [1.18.3] — 2026-09-28
+
+### Changed
+
+- Handbook: *Starting it from anywhere* (the `dayshift` command) and *On
+  Windows* in the first-run chapter — neither was covered there before.
+- README: the Windows-script test in the test list; CI's Windows check noted.
+
 ## [1.18.2] — 2026-09-28
 
 ### Fixed

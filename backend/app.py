@@ -111,7 +111,7 @@ async def _weekly_export_loop() -> None:
 app = FastAPI(
     title="Dayshift",
     description="Single-user daily study-time tracker.",
-    version="1.18.2",
+    version="1.18.3",
     lifespan=lifespan,
 )
 

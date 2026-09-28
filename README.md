@@ -40,7 +40,8 @@ that terminal) and opens the browser once it's up. Also `dayshift status`,
 
 ### On Windows
 
-Everything runs natively from Command Prompt — no WSL needed. Install
+Everything runs natively from Command Prompt — no WSL needed; CI proves it on
+every push with a fresh Windows machine (tests, then a first `start.cmd`). Install
 [Python 3.11+](https://www.python.org/downloads/) and
 [Node.js 20+](https://nodejs.org), then from the project folder:
 
@@ -696,7 +697,7 @@ does not run `api-types-check` yet; `make check` does.
 
 Three layers — `make check` runs all of them:
 
-- **Backend** (pytest, ~440 tests), split by what they protect:
+- **Backend** (pytest, ~450 tests), split by what they protect:
 
 - `tests/test_scoring.py` — the rules in `backend/scoring.py` as pure
   functions: effective targets, the tracking-start boundary, override
@@ -718,6 +719,8 @@ Three layers — `make check` runs all of them:
   the ledger's after-the-fact rules, and restore round-trips and refusals.
 - `tests/test_focus_stats.py`, `test_exam_plan.py` — focus-block counts and
   the study-target pace.
+- `tests/test_windows_scripts.py` — the Windows scripts stay ASCII-only
+  (Windows PowerShell 5.1 misreads UTF-8 in scripts without a BOM).
 - `tests/test_session_editor.py` — what an edit does to "measured" (edited
   timer minutes become manual and keep the reading; other edits don't), tag
   limits, and splits keeping the exam link.

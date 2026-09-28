@@ -221,6 +221,7 @@ Not user-visible, but this is what keeps the tool alive in year two.
 - [x] Commits per session branch/issue; top tags and branches in the review.
 - [x] Focus-block stats; exam study targets with a daily pace.
 - [x] CI runs the API-types check and the end-to-end test.
+- [x] Windows, natively from Command Prompt (`start.cmd`, `dayshift`), checked in CI.
 
 ---
 
